@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:help.obsidian.md)",
+      "WebFetch(domain:publish-01.obsidian.md)",
+      "WebFetch(domain:www.howtogeek.com)",
+      "WebFetch(domain:deepakness.com)",
+      "WebFetch(domain:zenn.dev)",
+      "WebFetch(domain:frankanaya.com)",
+      "WebFetch(domain:obsidian.md)",
+      "WebFetch(domain:retypeapp.github.io)"
+    ]
+  }
+}
