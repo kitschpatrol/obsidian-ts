@@ -20,3 +20,7 @@ node_modules/
 vendor/
 
 # Customizations
+/.claude
+/test/assets/obsidian-ts-test-vault/.obsidian/workspace.json
+/test/assets/.obsidian-ts-test-vault-backup
+/scratch.ts

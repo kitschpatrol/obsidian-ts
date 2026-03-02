@@ -1,0 +1,4 @@
+/* Test CSS snippet for obsidian-ts integration tests */
+body {
+	--test-variable: 1;
+}

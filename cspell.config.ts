@@ -1,3 +1,6 @@
 import { cspellConfig } from '@kitschpatrol/cspell-config'
 
-export default cspellConfig()
+export default cspellConfig({
+	ignorePaths: ['scratch/*', 'test/assets/obsidian-ts-test-vault/*'],
+	words: ['deadend', 'deadends', 'Dynalist', 'newtab', 'readback', 'tinyexec', 'wordcount'],
+})

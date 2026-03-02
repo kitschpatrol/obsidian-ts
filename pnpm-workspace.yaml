@@ -1,5 +1,3 @@
-# Required by @kitschpatrol/shared-config
-
 onlyBuiltDependencies:
   - esbuild
   - unrs-resolver
@@ -7,7 +5,7 @@ onlyBuiltDependencies:
 publicHoistPattern:
   - '@kitschpatrol/repo-config'
   - '@kitschpatrol/typescript-config'
-  - 'case-police'
+  - case-police
   - '*cspell*'
   - '*eslint*'
   - '*knip*'

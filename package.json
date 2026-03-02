@@ -1,8 +1,14 @@
 {
 	"name": "obsidian-ts",
 	"version": "0.0.0",
-	"description": "A library project.",
+	"description": "A fully-typed wrapper library for the Obsidian CLI.",
 	"keywords": [
+		"obsidian",
+		"cli",
+		"typescript",
+		"pkm",
+		"obsidian-md",
+		"obsidian-cli",
 		"npm-package"
 	],
 	"homepage": "https://github.com/kitschpatrol/obsidian-ts",
@@ -36,20 +42,25 @@
 		"fix": "ksc fix",
 		"lint": "ksc lint",
 		"release": "bumpp --commit 'Release: %s' && pnpm run build && NPM_AUTH_TOKEN=$(op read 'op://Personal/npm/token') && pnpm publish",
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"test": "vitest run"
 	},
 	"dependencies": {
-		"@types/node": "~24.1.0",
 		"lognow": "^0.4.1",
-		"tinyexec": "^1.0.2"
+		"semver": "^7.7.4",
+		"tinyexec": "^1.0.2",
+		"type-fest": "^5.4.4",
+		"zod": "^4.3.6"
 	},
 	"devDependencies": {
 		"@arethetypeswrong/core": "^0.18.2",
 		"@kitschpatrol/shared-config": "^6.0.2",
+		"@types/node": "~24.1.0",
+		"@types/semver": "^7.7.1",
 		"bumpp": "^10.4.1",
 		"publint": "^0.3.18",
 		"tsdown": "^0.20.3",
-		"typescript": "~5.9.3"
+		"typescript": "~5.9.3",
+		"vitest": "^4.0.18"
 	},
 	"packageManager": "pnpm@10.30.3",
 	"engines": {

@@ -8,7 +8,27 @@
       "WebFetch(domain:zenn.dev)",
       "WebFetch(domain:frankanaya.com)",
       "WebFetch(domain:obsidian.md)",
-      "WebFetch(domain:retypeapp.github.io)"
+      "WebFetch(domain:retypeapp.github.io)",
+      "Bash(obsidian help:*)",
+      "Bash(obsidian:*)",
+      "Bash(for f in src/lib/*.ts)",
+      "Bash(printf:*)",
+      "Bash(for:*)",
+      "Bash(git stash:*)",
+      "Bash(git ls-files:*)",
+      "Bash(git mv:*)",
+      "Bash(do echo \"=== Run $i ===\")",
+      "Bash(/Applications/Obsidian.app/Contents/MacOS/obsidian:*)",
+      "Bash(do /Applications/Obsidian.app/Contents/MacOS/obsidian vault=obsidian-ts-test-vault delete \"path=$f\" permanent)",
+      "Bash(npx vitest run:*)",
+      "Bash(git -C /Users/mika/Code/obsidian-ts diff --stat)",
+      "Bash(/tmp/bookmark_patch.py:*)",
+      "Bash(/tmp/command_patch.py:*)",
+      "Bash(/tmp/daily_patch.py:*)",
+      "Bash(/tmp/dev_patch.py:*)",
+      "Bash(/tmp/file_patch.py:*)",
+      "Bash(/tmp/fix_bookmark.py:*)",
+      "WebFetch(domain:zod.dev)"
     ]
   }
 }

@@ -9,4 +9,5 @@ export default defineConfig({
 	platform: 'neutral',
 	publint: true,
 	tsconfig: 'tsconfig.build.json',
+	unbundle: true,
 })
