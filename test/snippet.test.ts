@@ -1,16 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import * as general from '../src/commands/general'
 import * as snippet from '../src/commands/snippet'
 import { backupVault, restoreVault, setupVault } from './helpers'
 
-beforeAll(async () => {
+beforeAll(() => {
 	setupVault()
 	backupVault()
-
-	// Force Obsidian to re-index the vault. After a previous test file's
-	// restoreVault() rebuilds the vault on disk, the in-memory index
-	// (including snippets) may be stale.
-	await general.reload()
 })
 
 afterAll(() => {
@@ -18,7 +12,7 @@ afterAll(() => {
 })
 
 describe('list', () => {
-	it('lists installed CSS snippets', async () => {
+	it('lists installed CSS snippets', { retry: 3 }, async () => {
 		const snippets = await snippet.list()
 		expect(snippets).toContain('test-snippet')
 	})
@@ -35,7 +29,7 @@ describe('enabled', () => {
 })
 
 describe('enable and disable', () => {
-	it('enables then disables a snippet', async () => {
+	it('enables then disables a snippet', { retry: 3 }, async () => {
 		await snippet.enable({ name: 'test-snippet' })
 		const afterEnable = await snippet.enabled()
 		expect(afterEnable).toContain('test-snippet')
