@@ -25,8 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        # os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
       - name: Checkout
@@ -49,58 +48,68 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      # Skip for now
       - name: Lint
         run: pnpm run lint
 
-      # Install and start Obsidian on Linux using the AppImage distribution.
+      # Install Obsidian on Linux using the AppImage distribution.
       # We use AppImage instead of Flatpak because Flatpak sandboxes the config
       # path (~/.var/app/md.obsidian.Obsidian/...) making it harder to pre-seed.
       # Approach based on https://github.com/lucastraba/obsidianless
       #
-      # Steps:
+      # Overview:
       # 1. Install Electron runtime dependencies and Xvfb for a virtual display
-      # 2. Download and extract the AppImage
-      # 3. Symlink the binary onto PATH
-      # 4. Write obsidian.json to register the test vault and enable the CLI
-      # 5. Start Xvfb and launch Obsidian in the background (the CLI requires a
-      #    running Obsidian instance to communicate with via IPC)
-      # 6. Replace the symlink with a wrapper script that injects DISPLAY,
-      #    --no-sandbox, and filters noisy dbus errors for all CLI callers
+      # 2. Download and extract the AppImage, symlink binary onto PATH
+      # 3. Write obsidian.json to register the test vault and enable the CLI
+      # 4. Start Xvfb (Electron needs a display even for CLI-only usage)
+      # 5. Launch Obsidian in the background (CLI commands communicate with a
+      #    running instance via IPC — without it, commands hang)
+      # 6. Create a wrapper script at /usr/local/bin/obsidian so all callers
+      #    (including obsidian-ts) transparently get DISPLAY and --no-sandbox
+      #
+      # Key flags:
+      # --no-sandbox: required because the extracted AppImage's chrome-sandbox
+      #   binary lacks the SUID root permissions Chromium expects (would need
+      #   chown root + chmod 4755, but --no-sandbox is simpler)
+      # --disable-gpu: no real GPU available in CI
+      #
+      # The wrapper also filters noisy "ERROR:dbus/bus.cc" messages from stderr
+      # and uses PIPESTATUS to preserve the real obsidian exit code (not grep's).
       - name: Setup Obsidian (Linux)
         if: runner.os == 'Linux'
         run: |
-          # Install Electron runtime deps and virtual display
+          # Install Electron runtime deps and Xvfb virtual display server
           sudo apt-get update
           sudo apt-get install -y xvfb dbus-x11 libgtk-3-0 libnss3 libasound2t64 libgbm1 libsecret-1-0
 
-          # Download and extract the AppImage
+          # Download the AppImage, extract it, and symlink the binary onto PATH
           wget -q "https://github.com/obsidianmd/obsidian-releases/releases/download/v${OBSIDIAN_VERSION}/Obsidian-${OBSIDIAN_VERSION}.AppImage" -O /tmp/obsidian.AppImage
           chmod +x /tmp/obsidian.AppImage
           cd /tmp && /tmp/obsidian.AppImage --appimage-extract
           sudo mv /tmp/squashfs-root /opt/obsidian
           sudo ln -s /opt/obsidian/obsidian /usr/local/bin/obsidian
 
-          # Write obsidian.json to register the test vault and enable the CLI.
-          # Normally this is done via Settings > General, but we pre-seed it here.
-          # The "cli" key was found by reverse-engineering obsidian.asar.
+          # Pre-seed obsidian.json to register the test vault and enable the CLI.
+          # The "cli" key is normally set via Settings > General > CLI toggle.
+          # It was found by reverse-engineering obsidian.asar — the main process
+          # checks D.cli where D is the parsed config file.
+          # Config path: ~/.config/obsidian/obsidian.json (standard Linux path)
           mkdir -p ~/.config/obsidian
           jq -n --arg name "$(basename "${OBSIDIAN_VAULT}")" --arg path "${GITHUB_WORKSPACE}/${OBSIDIAN_VAULT}" \
             '{"vaults":{($name):{"path":$path,"ts":0,"open":true}},"cli":true}' \
             > ~/.config/obsidian/obsidian.json
 
-          # Start a virtual display for the Electron-based CLI
+          # Start Xvfb — Electron requires a display even for headless CLI usage
           Xvfb -ac :99 -screen 0 1280x1024x16 &
 
-          # Launch Obsidian in the background — the CLI talks to this instance via IPC.
-          # --no-sandbox: extracted AppImage lacks a properly configured chrome-sandbox
-          # --disable-gpu: no real GPU in CI
+          # Launch Obsidian in the background so CLI commands have an instance to
+          # talk to via IPC. Without this, CLI commands become the main instance
+          # and hang waiting for a GUI interaction.
           DISPLAY=:99 /usr/local/bin/obsidian --no-sandbox --disable-gpu &
           sleep 5
 
-          # Replace the symlink with a wrapper script so all downstream callers
-          # (including obsidian-ts) get DISPLAY / --no-sandbox automatically and
-          # don't see noisy dbus errors in their output.
+          # Replace the symlink with a wrapper script so downstream callers
+          # (including obsidian-ts) just call `obsidian` without worrying about
+          # DISPLAY, --no-sandbox, or dbus noise.
           sudo mv /usr/local/bin/obsidian /usr/local/bin/obsidian-real
           # shellcheck disable=SC2016
           printf '%s\n' \
@@ -110,18 +119,28 @@ jobs:
             | sudo tee /usr/local/bin/obsidian > /dev/null
           sudo chmod +x /usr/local/bin/obsidian
 
+      # TODO: Untested — may need a wrapper script or background instance like Linux.
+      # Install Obsidian on macOS from the official .dmg.
+      # macOS doesn't need Xvfb, --no-sandbox, or a wrapper — the CLI works
+      # natively. We just need to mount the .dmg, copy the app, and pre-seed
+      # obsidian.json to register the test vault and enable the CLI.
+      # Config path: ~/Library/Application Support/obsidian/obsidian.json
       - name: Setup Obsidian (macOS)
         if: runner.os == 'macOS'
         run: |
+          # Download and mount the .dmg, copy the app to /Applications
           wget -q "https://github.com/obsidianmd/obsidian-releases/releases/download/v${OBSIDIAN_VERSION}/Obsidian-${OBSIDIAN_VERSION}.dmg"
           sudo hdiutil attach "Obsidian-${OBSIDIAN_VERSION}.dmg"
           sudo cp -rf "/Volumes/Obsidian ${OBSIDIAN_VERSION}-universal/Obsidian.app" /Applications
           sudo hdiutil detach "/Volumes/Obsidian ${OBSIDIAN_VERSION}-universal"
+
+          # Pre-seed obsidian.json (same format as Linux, different path)
           mkdir -p ~/Library/Application\ Support/obsidian
           jq -n --arg name "$(basename "${OBSIDIAN_VAULT}")" --arg path "${GITHUB_WORKSPACE}/${OBSIDIAN_VAULT}" \
             '{"vaults":{($name):{"path":$path,"ts":0,"open":true}},"cli":true}' \
             > ~/Library/Application\ Support/obsidian/obsidian.json
 
+      # TODO: Windows support — config path is %APPDATA%/obsidian/obsidian.json
       - name: Setup Obsidian (Windows)
         if: runner.os == 'Windows'
         run: echo "Obsidian CI setup not yet supported on Windows. Skipping."
