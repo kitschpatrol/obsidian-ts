@@ -254,6 +254,12 @@ jobs:
           Write-Host "Config written to $configDir\obsidian.json"
           Get-Content "$configDir\obsidian.json"
 
+          # Add Obsidian's directory to PATH for subsequent steps.
+          # Windows is case-insensitive, so `obsidian` resolves to `Obsidian.exe`.
+          # We use GITHUB_PATH instead of a .cmd wrapper because Node.js
+          # child_process.spawn doesn't resolve .cmd files without shell mode.
+          echo $obsidianDir >> $env:GITHUB_PATH
+
           # Launch Obsidian in the background so CLI commands have an instance
           # to talk to via IPC
           Start-Process -FilePath $obsidianExe
@@ -267,11 +273,19 @@ jobs:
           }
           Write-Host "Obsidian is running (PID: $($proc[0].Id))"
 
-          # Create a wrapper batch file so `obsidian` resolves on PATH.
-          # Place it in a directory already on PATH (C:\Windows).
-          $wrapper = "@echo off`r`n`"$obsidianExe`" %* 2>nul"
-          [System.IO.File]::WriteAllText("C:\Windows\obsidian.cmd", $wrapper)
-          Write-Host "Wrapper created at C:\Windows\obsidian.cmd"
+      - name: Debug Obsidian CLI (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Write-Host "=== PATH check ==="
+          Get-Command obsidian -ErrorAction SilentlyContinue | Select-Object Source
+          Get-Command Obsidian -ErrorAction SilentlyContinue | Select-Object Source
+          Write-Host "=== obsidian version ==="
+          & obsidian version 2>&1
+          Write-Host "=== exit code: $LASTEXITCODE ==="
+          Write-Host "=== obsidian vault=obsidian-ts-test-vault files ==="
+          & obsidian vault=obsidian-ts-test-vault files 2>&1
+          Write-Host "=== exit code: $LASTEXITCODE ==="
 
       - name: Test (Linux)
         if: runner.os == 'Linux'
