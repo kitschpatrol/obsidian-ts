@@ -13,6 +13,10 @@ inputs:
       Path to the vault directory, relative to the repository root
       (e.g. "test/assets/my-vault")
     required: true
+  cache:
+    description: Cache the downloaded installer between runs
+    required: false
+    default: 'true'
 
 outputs:
   cli-path:
@@ -27,7 +31,8 @@ runs:
   steps:
     # ── Cache the downloaded installer artifact ──────────────────────────
     - name: Cache Obsidian installer
-      uses: actions/cache@v4
+      if: inputs.cache == 'true'
+      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
       id: cache-obsidian
       with:
         path: ${{ runner.temp }}/obsidian-installer
@@ -156,7 +161,7 @@ runs:
         OBSIDIAN_VERSION: ${{ inputs.version }}
         OBSIDIAN_VAULT: ${{ inputs.vault }}
         CACHE_HIT: ${{ steps.cache-obsidian.outputs.cache-hit }}
-      run: |
+      run: | # zizmor: ignore[github-env] path comes from known install locations we control
         # Download the installer (unless cached), then always run it.
         # The cache stores the downloaded .exe, not the installed app.
         New-Item -ItemType Directory -Force -Path "$env:RUNNER_TEMP\obsidian-installer" | Out-Null
