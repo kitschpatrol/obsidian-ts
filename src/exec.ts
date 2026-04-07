@@ -222,6 +222,10 @@ export async function exec(
 
 		return output
 	} catch (error) {
+		if (isSpawnError(error)) {
+			throw new ObsidianNotFoundError(globalBinary)
+		}
+
 		if (error instanceof NonZeroExitError && error.output) {
 			throw new ObsidianError(
 				error.output.stderr.trim(),
@@ -232,14 +236,15 @@ export async function exec(
 			)
 		}
 
-		if (isSpawnError(error)) {
-			throw new ObsidianNotFoundError(globalBinary)
-		}
-
 		throw error
 	}
 }
 
 function isSpawnError(error: unknown): error is NodeJS.ErrnoException {
-	return error instanceof Error && 'code' in error && error.code === 'ENOENT'
+	if (!(error instanceof Error)) return false
+	if ('code' in error && error.code === 'ENOENT') return true
+	// On Windows, spawn errors may surface with a different structure
+	// but still contain ENOENT in the message
+	if (error.message?.includes('ENOENT')) return true
+	return false
 }
