@@ -88,14 +88,17 @@ jobs:
         if: runner.os == 'Windows'
         run: echo "Obsidian CI install not yet supported on Windows. Skipping."
 
-      # Every Obsidian CLI call launches the Electron binary, which needs a
-      # virtual display, sandbox bypass, and produces noisy dbus errors. Wrap
-      # the real binary in a script that handles all of this so downstream
-      # callers (including obsidian-ts) just call `obsidian` normally.
-      - name: Setup Obsidian wrapper (Linux)
+      # The Obsidian CLI requires a running Obsidian instance to communicate
+      # with via IPC. Start Xvfb for a virtual display, then launch Obsidian
+      # in the background with --no-sandbox and --disable-gpu for CI.
+      # Wrap the binary so all CLI calls get DISPLAY, --no-sandbox, and
+      # dbus error filtering automatically.
+      - name: Start Obsidian (Linux)
         if: runner.os == 'Linux'
         run: |
           Xvfb -ac :99 -screen 0 1280x1024x16 &
+          DISPLAY=:99 /usr/local/bin/obsidian --no-sandbox --disable-gpu &
+          sleep 5
           sudo mv /usr/local/bin/obsidian /usr/local/bin/obsidian-real
           printf '#!/bin/bash\nDISPLAY=:99 /usr/local/bin/obsidian-real --no-sandbox "$@" 2>&1 | grep -v "ERROR:dbus/bus.cc"\n' | sudo tee /usr/local/bin/obsidian > /dev/null
           sudo chmod +x /usr/local/bin/obsidian
