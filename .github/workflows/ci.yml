@@ -50,8 +50,8 @@ jobs:
         run: pnpm run build
 
       # Skip for now
-      # - name: Lint
-      #   run: pnpm run lint
+      - name: Lint
+        run: pnpm run lint
 
       # Install and start Obsidian on Linux using the AppImage distribution.
       # We use AppImage instead of Flatpak because Flatpak sandboxes the config
@@ -67,7 +67,6 @@ jobs:
       #    running Obsidian instance to communicate with via IPC)
       # 6. Replace the symlink with a wrapper script that injects DISPLAY,
       #    --no-sandbox, and filters noisy dbus errors for all CLI callers
-      # 7. Sanity-check with `obsidian version` and `obsidian vault`
       - name: Setup Obsidian (Linux)
         if: runner.os == 'Linux'
         run: |
@@ -103,20 +102,13 @@ jobs:
           # (including obsidian-ts) get DISPLAY / --no-sandbox automatically and
           # don't see noisy dbus errors in their output.
           sudo mv /usr/local/bin/obsidian /usr/local/bin/obsidian-real
-          cat <<'WRAPPER' | sudo tee /usr/local/bin/obsidian > /dev/null
-          #!/bin/bash
-          # Wrapper to inject DISPLAY / --no-sandbox and filter dbus noise.
-          # Uses PIPESTATUS to preserve the real obsidian exit code.
-          DISPLAY=:99 /usr/local/bin/obsidian-real --no-sandbox "$@" 2>&1 | grep -v "ERROR:dbus/bus.cc"
-          exit "${PIPESTATUS[0]}"
-          WRAPPER
+          # shellcheck disable=SC2016
+          printf '%s\n' \
+            '#!/bin/bash' \
+            'DISPLAY=:99 /usr/local/bin/obsidian-real --no-sandbox "$@" 2>&1 | grep -v "ERROR:dbus/bus.cc"' \
+            'exit "${PIPESTATUS[0]}"' \
+            | sudo tee /usr/local/bin/obsidian > /dev/null
           sudo chmod +x /usr/local/bin/obsidian
-
-          # Sanity checks
-          which obsidian
-          cat ~/.config/obsidian/obsidian.json
-          obsidian version
-          obsidian vault
 
       - name: Setup Obsidian (macOS)
         if: runner.os == 'macOS'
