@@ -221,8 +221,11 @@ runs:
         # Add to PATH for subsequent steps
         echo $obsidianDir >> $env:GITHUB_PATH
 
-        # Launch Obsidian in the background for IPC
-        Start-Process -FilePath $obsidianExe
+        # Launch Obsidian in the background for IPC.
+        # Use -Verb RunAs to ensure admin elevation — on Windows, the
+        # first CLI interaction needs admin rights to initialize the IPC
+        # named pipe, after which non-admin calls (including writes) work.
+        Start-Process -FilePath $obsidianExe -Verb RunAs
         Start-Sleep -Seconds 10
 
         # Verify Obsidian is running
@@ -232,3 +235,11 @@ runs:
           exit 1
         }
         Write-Host "Obsidian is running (PID: $($proc[0].Id))"
+
+        # Warmup: run a read command to initialize the IPC channel.
+        # On Windows, the first CLI call as admin bootstraps the named
+        # pipe so subsequent calls (including writes) work.
+        Write-Host "Running warmup CLI command..."
+        & $obsidianExe version 2>$null
+        Write-Host "Warmup complete (exit: $LASTEXITCODE)"
+        Start-Sleep -Seconds 2
