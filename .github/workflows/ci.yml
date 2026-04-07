@@ -103,7 +103,13 @@ jobs:
           # (including obsidian-ts) get DISPLAY / --no-sandbox automatically and
           # don't see noisy dbus errors in their output.
           sudo mv /usr/local/bin/obsidian /usr/local/bin/obsidian-real
-          printf '#!/bin/bash\nDISPLAY=:99 /usr/local/bin/obsidian-real --no-sandbox "$@" 2>&1 | grep -v "ERROR:dbus/bus.cc"\n' | sudo tee /usr/local/bin/obsidian > /dev/null
+          cat <<'WRAPPER' | sudo tee /usr/local/bin/obsidian > /dev/null
+          #!/bin/bash
+          # Wrapper to inject DISPLAY / --no-sandbox and filter dbus noise.
+          # Uses PIPESTATUS to preserve the real obsidian exit code.
+          DISPLAY=:99 /usr/local/bin/obsidian-real --no-sandbox "$@" 2>&1 | grep -v "ERROR:dbus/bus.cc"
+          exit "${PIPESTATUS[0]}"
+          WRAPPER
           sudo chmod +x /usr/local/bin/obsidian
 
           # Sanity checks
