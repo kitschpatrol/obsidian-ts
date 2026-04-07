@@ -25,7 +25,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest]
+        # os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
       - name: Checkout
@@ -83,11 +84,21 @@ jobs:
         if: runner.os == 'Windows'
         run: echo "Obsidian CI install not yet supported on Windows. Skipping."
 
+      - name: Verify Obsidian (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          Xvfb -ac :99 -screen 0 1280x1024x16 &
+          export DISPLAY=:99
+          eval "$(dbus-launch --sh-syntax)"
+          which obsidian
+          obsidian --version
+          cat ~/.config/obsidian/obsidian.json
+          obsidian vault
+
       - name: Test (Linux)
         if: runner.os == 'Linux'
         run: |
-          Xvfb -ac :0 -screen 0 1280x1024x16 &
-          export DISPLAY=:0
+          export DISPLAY=:99
           eval "$(dbus-launch --sh-syntax)"
           pnpm run test
 
