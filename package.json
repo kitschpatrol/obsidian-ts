@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-ts",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "A fully-typed wrapper library for the Obsidian CLI.",
 	"keywords": [
 		"obsidian",
