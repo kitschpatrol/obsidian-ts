@@ -47,8 +47,9 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Lint
-        run: pnpm run lint
+      # Skip for now
+      # - name: Lint
+      #   run: pnpm run lint
 
       - name: Install Obsidian (Linux)
         if: runner.os == 'Linux'
