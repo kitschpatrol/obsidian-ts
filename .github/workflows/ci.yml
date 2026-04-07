@@ -59,6 +59,12 @@ jobs:
           flatpak remote-add --user flathub https://flathub.org/repo/flathub.flatpakrepo
           flatpak install --user -y flathub md.obsidian.Obsidian
 
+      - name: Enable Obsidian CLI (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          CONFIG=~/.config/obsidian/obsidian.json
+          tmp=$(jq '.cli = true' "${CONFIG}") && echo "${tmp}" > "${CONFIG}"
+
       - name: Install Obsidian (macOS)
         if: runner.os == 'macOS'
         run: |
@@ -66,6 +72,12 @@ jobs:
           sudo hdiutil attach "Obsidian-${OBSIDIAN_VERSION}.dmg"
           sudo cp -rf "/Volumes/Obsidian ${OBSIDIAN_VERSION}-universal/Obsidian.app" /Applications
           sudo hdiutil detach "/Volumes/Obsidian ${OBSIDIAN_VERSION}-universal"
+
+      - name: Enable Obsidian CLI (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          CONFIG=~/Library/Application\ Support/obsidian/obsidian.json
+          tmp=$(jq '.cli = true' "${CONFIG}") && echo "${tmp}" > "${CONFIG}"
 
       - name: Install Obsidian (Windows)
         if: runner.os == 'Windows'
