@@ -11,8 +11,6 @@ beforeAll(async () => {
 	// restoreVault() rebuilds the vault on disk, the in-memory index
 	// (including snippets) may be stale.
 	await general.reload()
-	// Give Obsidian time to complete the re-index after reload
-	await new Promise((resolve) => setTimeout(resolve, 1000))
 })
 
 afterAll(() => {
