@@ -177,16 +177,47 @@ jobs:
 
           # Create a wrapper script so `obsidian` resolves on PATH.
           # Electron prints diagnostics to both stdout and stderr that corrupt
-          # CLI output (especially JSON responses). Two-pronged approach:
-          #   1. --enable-logging=stderr forces Chromium's LOG() calls to stderr
-          #   2. stderr is redirected to /dev/null
-          #   3. Remaining stdout noise (Obsidian's own console.log) is filtered
-          # shellcheck disable=SC2016
-          printf '%s\n' \
-            '#!/bin/bash' \
-            '/Applications/Obsidian.app/Contents/MacOS/Obsidian --enable-logging=stderr "$@" 2>/dev/null | grep -vE "^[0-9]{4}-[0-9]{2}-[0-9]{2} |^\[|^Ignored:|^Error: net::|^[[:space:]]+at |^Failed to |^Checking for |^Loaded main app"' \
-            'exit "${PIPESTATUS[0]}"' \
-            | sudo tee /usr/local/bin/obsidian > /dev/null
+          # CLI output (especially JSON responses). A grep blacklist can't
+          # catch every pattern, so we use an inline node script to clean the
+          # output: it finds the first/last JSON brackets and extracts just
+          # the JSON, or for non-JSON output it filters known noise patterns.
+          # stderr is redirected to /dev/null to suppress Chromium diagnostics.
+          cat <<'WRAPPER' | sudo tee /usr/local/bin/obsidian > /dev/null
+          #!/bin/bash
+          /Applications/Obsidian.app/Contents/MacOS/Obsidian --enable-logging=stderr "$@" 2>/dev/null | node -e "
+          let d='';
+          process.stdin.setEncoding('utf8');
+          process.stdin.on('data',c=>d+=c);
+          process.stdin.on('end',()=>{
+            // Try to extract a JSON object or array from the output
+            const s=d.search(/[\[{]/);
+            if(s>=0){
+              const opener=d[s], closer=opener==='{'?'}':']';
+              let depth=0;
+              for(let i=s;i<d.length;i++){
+                if(d[i]===opener)depth++;
+                else if(d[i]===closer)depth--;
+                if(depth===0){
+                  try{JSON.parse(d.slice(s,i+1));process.stdout.write(d.slice(s,i+1));process.exit(0);}catch{}
+                }
+              }
+            }
+            // Non-JSON: filter known Electron noise line-by-line
+            const clean=d.split('\n').filter(l=>l.trim()
+              &&!/^\d{4}-\d{2}-\d{2} /.test(l)
+              &&!/^\[/.test(l)
+              &&!/^Ignored:/.test(l)
+              &&!/^Error: net::/.test(l)
+              &&!/^\s+at /.test(l)
+              &&!/^Failed to /.test(l)
+              &&!/^Checking for /.test(l)
+              &&!/^Loaded main/.test(l)
+            );
+            process.stdout.write(clean.join('\n'));
+          });
+          "
+          exit "${PIPESTATUS[0]}"
+          WRAPPER
           sudo chmod +x /usr/local/bin/obsidian
 
       # TODO: Windows support — config path is %APPDATA%/obsidian/obsidian.json
