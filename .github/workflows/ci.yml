@@ -125,20 +125,13 @@ jobs:
       # via IPC, so we must launch it in the background before running tests.
       #
       # Overview:
-      # 1. Download and mount the .dmg, copy the app to /Applications
+      # 1. Download and mount the .dmg via ditto (preserves bundle metadata)
       # 2. Remove macOS quarantine so the app can launch
       # 3. Write obsidian.json to register the test vault and enable the CLI
-      # 4. Launch Obsidian via `open` (native macOS launcher that properly
-      #    resolves helper apps and code signatures)
-      # 5. Create a wrapper script at /usr/local/bin/obsidian that filters
-      #    Electron log noise from stdout (timestamp-prefixed lines confuse
-      #    semver.coerce() into reading dates as version numbers)
-      #
-      # Key difference from Linux: we use `open -a` to launch the background
-      # instance instead of calling the binary directly. This is required
-      # because macOS Electron apps rely on Launch Services to properly set up
-      # helper processes (renderer, GPU, plugin). Calling the binary directly
-      # causes "Unable to find helper app" FATAL errors and GPU crashes.
+      # 4. Launch Obsidian via `open -a` (uses Launch Services to properly
+      #    resolve Electron helper apps — calling the binary directly causes
+      #    "Unable to find helper app" FATAL errors)
+      # 5. Create a wrapper script at /usr/local/bin/obsidian
       #
       # Config path: ~/Library/Application Support/obsidian/obsidian.json
       - name: Setup Obsidian (macOS)
@@ -176,48 +169,12 @@ jobs:
           echo "Obsidian is running (PID: $(pgrep -f 'Obsidian.app' | head -1))"
 
           # Create a wrapper script so `obsidian` resolves on PATH.
-          # Electron prints diagnostics to both stdout and stderr that corrupt
-          # CLI output (especially JSON responses). A grep blacklist can't
-          # catch every pattern, so we use an inline node script to clean the
-          # output: it finds the first/last JSON brackets and extracts just
-          # the JSON, or for non-JSON output it filters known noise patterns.
-          # stderr is redirected to /dev/null to suppress Chromium diagnostics.
-          cat <<'WRAPPER' | sudo tee /usr/local/bin/obsidian > /dev/null
-          #!/bin/bash
-          /Applications/Obsidian.app/Contents/MacOS/Obsidian --enable-logging=stderr "$@" 2>/dev/null | node -e "
-          let d='';
-          process.stdin.setEncoding('utf8');
-          process.stdin.on('data',c=>d+=c);
-          process.stdin.on('end',()=>{
-            // Try to extract a JSON object or array from the output
-            const s=d.search(/[\[{]/);
-            if(s>=0){
-              const opener=d[s], closer=opener==='{'?'}':']';
-              let depth=0;
-              for(let i=s;i<d.length;i++){
-                if(d[i]===opener)depth++;
-                else if(d[i]===closer)depth--;
-                if(depth===0){
-                  try{JSON.parse(d.slice(s,i+1));process.stdout.write(d.slice(s,i+1));process.exit(0);}catch{}
-                }
-              }
-            }
-            // Non-JSON: filter known Electron noise line-by-line
-            const clean=d.split('\n').filter(l=>l.trim()
-              &&!/^\d{4}-\d{2}-\d{2} /.test(l)
-              &&!/^\[/.test(l)
-              &&!/^Ignored:/.test(l)
-              &&!/^Error: net::/.test(l)
-              &&!/^\s+at /.test(l)
-              &&!/^Failed to /.test(l)
-              &&!/^Checking for /.test(l)
-              &&!/^Loaded main/.test(l)
-            );
-            process.stdout.write(clean.join('\n'));
-          });
-          "
-          exit "${PIPESTATUS[0]}"
-          WRAPPER
+          # stdout is clean; just suppress stderr to avoid Chromium diagnostics.
+          # shellcheck disable=SC2016
+          printf '%s\n' \
+            '#!/bin/bash' \
+            '/Applications/Obsidian.app/Contents/MacOS/Obsidian "$@" 2>/dev/null' \
+            | sudo tee /usr/local/bin/obsidian > /dev/null
           sudo chmod +x /usr/local/bin/obsidian
 
       # TODO: Windows support — config path is %APPDATA%/obsidian/obsidian.json
@@ -228,24 +185,6 @@ jobs:
       - name: Test (Linux)
         if: runner.os == 'Linux'
         run: pnpm run test
-
-      - name: Debug raw Obsidian CLI output (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          echo "=== Raw 'obsidian version' (unfiltered) ==="
-          /Applications/Obsidian.app/Contents/MacOS/Obsidian --enable-logging=stderr version 2>/dev/null || true
-          echo ""
-          echo "=== Raw 'obsidian version' (with stderr) ==="
-          /Applications/Obsidian.app/Contents/MacOS/Obsidian version 2>&1 || true
-          echo ""
-          echo "=== Raw 'obsidian vault=${OBSIDIAN_VAULT} plugins versions' (JSON command, unfiltered) ==="
-          /Applications/Obsidian.app/Contents/MacOS/Obsidian --enable-logging=stderr vault=obsidian-ts-test-vault plugins versions 2>/dev/null || true
-          echo ""
-          echo "=== Raw 'obsidian vault=${OBSIDIAN_VAULT} files' (list command, unfiltered) ==="
-          /Applications/Obsidian.app/Contents/MacOS/Obsidian --enable-logging=stderr vault=obsidian-ts-test-vault files 2>/dev/null || true
-          echo ""
-          echo "=== Hexdump of first 200 bytes of 'version' output ==="
-          /Applications/Obsidian.app/Contents/MacOS/Obsidian --enable-logging=stderr version 2>/dev/null | head -c 200 | xxd || true
 
       - name: Test (macOS)
         if: runner.os == 'macOS'
