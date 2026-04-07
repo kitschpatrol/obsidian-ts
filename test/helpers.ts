@@ -7,14 +7,6 @@ import { configure } from '../src/exec'
 export const VAULT_NAME = 'obsidian-ts-test-vault'
 export const VAULT_DIR = join(import.meta.dirname, 'assets', 'obsidian-ts-test-vault')
 
-/**
- * `true` on Windows. Write commands in the Obsidian CLI hang on Windows
- * (the IPC call never returns a response, even though reads work fine).
- * Use with `it.skipIf(isWindows)` to skip write-dependent tests until
- * the upstream CLI is fixed.
- */
-export const isWindows = process.platform === 'win32'
-
 let backupDirectory: string | undefined
 
 /**
