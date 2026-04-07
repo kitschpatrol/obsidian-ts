@@ -102,7 +102,7 @@ async function checkCompatibility(): Promise<boolean> {
 		resolvedCliVersion = parsed.version
 		return satisfies(resolvedCliVersion, OBSIDIAN_CLI_VERSION)
 	} catch (error) {
-		if (isSpawnError(error)) {
+		if (isSpawnError(error) || isNotFoundError(error)) {
 			throw new ObsidianNotFoundError(globalBinary)
 		}
 
@@ -242,4 +242,14 @@ export async function exec(
 
 function isSpawnError(error: unknown): error is NodeJS.ErrnoException {
 	return error instanceof Error && 'code' in error && error.code === 'ENOENT'
+}
+
+/**
+ * On Windows, cross-spawn runs the binary through `cmd.exe` which exits with
+ * code 1 instead of ENOENT when the binary is not found.
+ */
+function isNotFoundError(error: unknown): boolean {
+	return (
+		error instanceof NonZeroExitError && error.output?.stderr.includes('is not recognized') === true
+	)
 }

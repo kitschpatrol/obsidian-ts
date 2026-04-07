@@ -13,6 +13,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
+env:
+  OBSIDIAN_VERSION: '1.12.7'
+  OBSIDIAN_VAULT: 'test/assets/obsidian-ts-test-vault'
+
 jobs:
   ci:
     runs-on: ${{ matrix.os }}
@@ -47,6 +51,39 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
-      # Will need to mock or install obsidian
-      # - name: Test
-      #   run: pnpm run test
+      - name: Setup Obsidian
+        uses: ./.github/actions/setup-obsidian
+        with:
+          version: ${{ env.OBSIDIAN_VERSION }}
+          vault: ${{ env.OBSIDIAN_VAULT }}
+
+      - name: Debug write commands (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Write-Host "=== Vault path ==="
+          Get-Content "$env:APPDATA\obsidian\obsidian.json"
+          Write-Host ""
+          Write-Host "=== Vault directory permissions ==="
+          Get-Acl "$env:GITHUB_WORKSPACE\$env:OBSIDIAN_VAULT" | Format-List
+          Write-Host ""
+          Write-Host "=== Try file:create with 15s timeout ==="
+          $job = Start-Job { & Obsidian vault=obsidian-ts-test-vault file:create path=_debug_test.md content="hello" 2>&1 }
+          $result = $job | Wait-Job -Timeout 15 | Receive-Job
+          if ($job.State -eq 'Running') { Stop-Job $job; Write-Host "TIMED OUT after 15s" } else { Write-Host "Result: $result"; Write-Host "Exit: $($job.ChildJobs[0].JobStateInfo.Reason)" }
+          Remove-Job $job -Force
+          Write-Host ""
+          Write-Host "=== Try with --no-sandbox flag ==="
+          $job = Start-Job { & Obsidian --no-sandbox vault=obsidian-ts-test-vault file:create path=_debug_test2.md content="hello2" 2>&1 }
+          $result = $job | Wait-Job -Timeout 15 | Receive-Job
+          if ($job.State -eq 'Running') { Stop-Job $job; Write-Host "TIMED OUT after 15s" } else { Write-Host "Result: $result" }
+          Remove-Job $job -Force
+          Write-Host ""
+          Write-Host "=== Check if Obsidian is still running ==="
+          Get-Process -Name "Obsidian" -ErrorAction SilentlyContinue | Select-Object Id, ProcessName, Responding
+          Write-Host ""
+          Write-Host "=== Check vault directory for created files ==="
+          Get-ChildItem "$env:GITHUB_WORKSPACE\$env:OBSIDIAN_VAULT" -Filter "_debug*" -ErrorAction SilentlyContinue | Select-Object Name
+
+      - name: Test
+        run: pnpm run test

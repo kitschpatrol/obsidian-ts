@@ -37,7 +37,7 @@ _Please note that this project is unofficial and not affiliated with or supporte
 ### Dependencies
 
 - [Node](https://nodejs.org/) 24.1+
-- [Obsidian](https://obsidian.md/download) 1.12+ (Desktop version)
+- [Obsidian](https://obsidian.md/download) 1.12.7+ (Desktop version)
 
 The [Obsidian CLI](https://help.obsidian.md/cli#Install+Obsidian+CLI) feature must be enabled in Obsidian:
 
@@ -654,6 +654,8 @@ The output has been subject to only moderate post-facto human scrutiny.
 ## Acknowledgments
 
 This project is just a thin wrapper over the Obsidian CLI. All credit to the [Obsidian team](https://obsidian.md/about)!
+
+Thanks to for a working approach to testing Obsidian in CI: <https://github.com/vslinko/obsidian-outliner/blob/6c69c88bf53168a4ec2e550c4ed2a3e78a229603/.github/workflows/build.yml#L36>
 
 <!-- contributing -->
 

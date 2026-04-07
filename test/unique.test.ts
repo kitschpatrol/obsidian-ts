@@ -8,8 +8,8 @@ beforeAll(() => {
 	backupVault()
 })
 
-afterAll(() => {
-	restoreVault()
+afterAll(async () => {
+	await restoreVault()
 })
 
 describe('create', () => {
