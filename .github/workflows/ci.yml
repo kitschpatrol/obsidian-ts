@@ -130,6 +130,9 @@ jobs:
       # 3. Write obsidian.json to register the test vault and enable the CLI
       # 4. Symlink the binary onto PATH so `obsidian` resolves
       # 5. Launch Obsidian in the background for IPC
+      # 6. Replace the symlink with a wrapper script that filters Electron log
+      #    noise from stdout (timestamp-prefixed lines like "2026-04-07 ..." that
+      #    confuse semver.coerce() into reading the date as a version number)
       #
       # Key flags:
       # --no-sandbox: avoids helper-process sandboxing issues in CI
@@ -172,6 +175,21 @@ jobs:
           # and hang waiting for GUI interaction.
           /usr/local/bin/obsidian --no-sandbox --disable-gpu --in-process-gpu &
           sleep 5
+
+          # Replace the symlink with a wrapper script that filters Electron's
+          # noisy log lines from stdout. Without this, lines like
+          # "2026-04-07 14:51:10 Loaded main app package ..." appear on stdout
+          # and semver.coerce() picks up the date "2026" as version "2026.0.0".
+          # The wrapper filters timestamp-prefixed lines and Chromium log lines
+          # (e.g. "[1234:0407/...") from stdout, and suppresses stderr entirely.
+          sudo mv /usr/local/bin/obsidian /usr/local/bin/obsidian-real
+          # shellcheck disable=SC2016
+          printf '%s\n' \
+            '#!/bin/bash' \
+            '/usr/local/bin/obsidian-real --no-sandbox --disable-gpu --in-process-gpu "$@" 2>/dev/null | grep -vE "^[0-9]{4}-[0-9]{2}-[0-9]{2} |^\[|^Ignored:"' \
+            'exit "${PIPESTATUS[0]}"' \
+            | sudo tee /usr/local/bin/obsidian > /dev/null
+          sudo chmod +x /usr/local/bin/obsidian
 
       # TODO: Windows support — config path is %APPDATA%/obsidian/obsidian.json
       - name: Setup Obsidian (Windows)
