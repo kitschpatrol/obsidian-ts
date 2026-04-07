@@ -2,6 +2,9 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import * as command from '../src/commands/command'
 import { setupVault } from './helpers'
 
+/** Matches strings starting with "editor:" */
+const EDITOR_PREFIX_REGEX = /^editor:/
+
 beforeAll(() => {
 	setupVault()
 })
@@ -15,7 +18,7 @@ describe('list', () => {
 	it('filters commands by prefix', async () => {
 		const commands = await command.list({ filter: 'editor:' })
 		for (const c of commands) {
-			expect(c).toMatch(/^editor:/)
+			expect(c).toMatch(EDITOR_PREFIX_REGEX)
 		}
 	})
 })

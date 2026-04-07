@@ -2,6 +2,9 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { configure, exec, getVault, ObsidianError, ObsidianNotFoundError } from '../src/exec'
 import { setupVault, VAULT_NAME } from './helpers'
 
+/** Matches semver-like version strings */
+const SEMVER_PREFIX_REGEX = /^\d+\.\d+\.\d+/
+
 beforeAll(() => {
 	setupVault()
 })
@@ -21,7 +24,7 @@ describe('configure and getVault', () => {
 describe('exec', () => {
 	it('executes a CLI command and returns trimmed output', async () => {
 		const result = await exec('version')
-		expect(result).toMatch(/^\d+\.\d+\.\d+/)
+		expect(result).toMatch(SEMVER_PREFIX_REGEX)
 	})
 
 	it('passes flags', async () => {

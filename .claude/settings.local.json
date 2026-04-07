@@ -30,5 +30,8 @@
       "Bash(/tmp/fix_bookmark.py:*)",
       "WebFetch(domain:zod.dev)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "context7"
+  ]
 }

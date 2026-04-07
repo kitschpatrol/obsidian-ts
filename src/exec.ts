@@ -6,9 +6,9 @@ const OBSIDIAN_CLI_DOCS_URL = 'https://help.obsidian.md/cli'
 const OBSIDIAN_CLI_VERSION = '^1.12.4'
 
 /**
- * Error thrown when the Obsidian CLI returns a non-zero exit code
- * or when CLI command reports a logical error in stdout
- * e.g. (the process exits 0 but output starts with `Error:`).
+ * Error thrown when the Obsidian CLI returns a non-zero exit code or when CLI
+ * command reports a logical error in stdout e.g. (the process exits 0 but
+ * output starts with `Error:`).
  */
 export class ObsidianError extends Error {
 	readonly exitCode: number | undefined
@@ -72,7 +72,9 @@ let resolvedCliVersion: string | undefined
  *
  * The result is memoized at the module level — only the first call invokes the
  * CLI `version` command; subsequent calls return the cached result.
- * @returns `true` if the CLI version satisfies the required range, `false` otherwise.
+ *
+ * @returns `true` if the CLI version satisfies the required range, `false`
+ *   otherwise.
  * @throws {ObsidianNotFoundError} If the Obsidian CLI binary is not on PATH.
  */
 export async function isCompatible(): Promise<boolean> {
@@ -110,9 +112,12 @@ async function checkCompatibility(): Promise<boolean> {
 
 /**
  * Set global defaults for vault name and binary path.
+ *
  * @param options - Command options.
- * @param options.vault - Default vault name to use for all commands. Pass `null` to clear.
- * @param options.binary - Path or name of the Obsidian CLI binary (default: `"obsidian"`).
+ * @param options.vault - Default vault name to use for all commands. Pass
+ *   `null` to clear.
+ * @param options.binary - Path or name of the Obsidian CLI binary (default:
+ *   `"obsidian"`).
  */
 // eslint-disable-next-line ts/no-restricted-types -- null is intentional for unsetting vault
 export function configure(options: { binary?: string; vault?: null | string }): void {
@@ -145,12 +150,15 @@ export function getVault(): string | undefined {
  *
  * Builds args in the CLI's `key=value` / bare-flag syntax and calls the
  * `obsidian` binary via tinyexec, returning trimmed stdout.
+ *
  * @param command - The CLI command to execute (e.g. `"files"`, `"daily:read"`).
  * @param parameters - Key-value parameters appended as `key=value` args.
  * @param flags - Bare-word boolean flags (e.g. `["total", "verbose"]`).
  * @param options - Per-call options.
- * @param options.skipErrorCheck - Skip the `Error:` prefix check on stdout (used by content-returning commands).
+ * @param options.skipErrorCheck - Skip the `Error:` prefix check on stdout
+ *   (used by content-returning commands).
  * @param options.vault - Override the default vault name.
+ *
  * @returns Trimmed stdout from the CLI.
  * @throws {ObsidianNotFoundError} If the binary is not on PATH.
  * @throws {ObsidianVersionError} If the CLI version is not compatible.

@@ -1,10 +1,11 @@
 import type { ILogBasic, ILogLayer } from 'lognow'
 import { createLogger, injectionHelper } from 'lognow'
+import { name } from '../package.json' with { type: 'json' }
 
 /**
  * The default logger instance for the library.
  */
-export let log = createLogger()
+export let log = createLogger(name)
 
 /**
  * Set the logger instance for the module.

@@ -3,6 +3,9 @@ import * as daily from '../src/commands/daily'
 import * as file from '../src/commands/file'
 import { backupVault, restoreVault, setupVault } from './helpers'
 
+/** Matches "YYYY-MM-DD.md" daily note paths */
+const DATE_PATH_REGEX = /^\d{4}-\d{2}-\d{2}\.md$/
+
 let dailyPath: string | undefined
 
 beforeAll(async () => {
@@ -29,7 +32,7 @@ afterAll(async () => {
 describe('path', () => {
 	it('returns a date-formatted file path', async () => {
 		dailyPath = await daily.path()
-		expect(dailyPath).toMatch(/^\d{4}-\d{2}-\d{2}\.md$/)
+		expect(dailyPath).toMatch(DATE_PATH_REGEX)
 	})
 })
 

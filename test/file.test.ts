@@ -3,6 +3,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import * as file from '../src/commands/file'
 import { backupVault, readVaultFile, restoreVault, setupVault, VAULT_DIR } from './helpers'
 
+/** Matches paths starting with "notes/" */
+const NOTES_PREFIX_REGEX = /^notes\//
+/** Matches paths ending with ".md" */
+const MD_EXTENSION_REGEX = /\.md$/
+
 beforeAll(() => {
 	setupVault()
 	backupVault()
@@ -24,7 +29,7 @@ describe('list', () => {
 	it('filters by folder', async () => {
 		const files = await file.list({ folder: 'notes' })
 		for (const f of files) {
-			expect(f).toMatch(/^notes\//)
+			expect(f).toMatch(NOTES_PREFIX_REGEX)
 		}
 
 		expect(files).toContain('notes/alpha.md')
@@ -33,7 +38,7 @@ describe('list', () => {
 	it('filters by extension', async () => {
 		const files = await file.list({ ext: 'md' })
 		for (const f of files) {
-			expect(f).toMatch(/\.md$/)
+			expect(f).toMatch(MD_EXTENSION_REGEX)
 		}
 	})
 })

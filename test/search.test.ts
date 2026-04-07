@@ -2,6 +2,9 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import * as search from '../src/commands/search'
 import { setupVault } from './helpers'
 
+/** Matches paths starting with "notes/" */
+const NOTES_PREFIX_REGEX = /^notes\//
+
 beforeAll(() => {
 	setupVault()
 })
@@ -15,7 +18,7 @@ describe('query', () => {
 	it('limits search to a folder', async () => {
 		const results = await search.query({ path: 'notes', query: 'alpha' })
 		for (const r of results) {
-			expect(r).toMatch(/^notes\//)
+			expect(r).toMatch(NOTES_PREFIX_REGEX)
 		}
 	})
 

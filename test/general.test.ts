@@ -2,6 +2,9 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import * as general from '../src/commands/general'
 import { setupVault } from './helpers'
 
+/** Matches semver-like version strings */
+const SEMVER_PREFIX_REGEX = /^\d+\.\d+\.\d+/
+
 beforeAll(() => {
 	setupVault()
 })
@@ -11,7 +14,7 @@ describe('version', () => {
 		const result = await general.version()
 		expect(result).toHaveProperty('version')
 		expect(result).toHaveProperty('installer')
-		expect(result.version).toMatch(/^\d+\.\d+\.\d+/)
-		expect(result.installer).toMatch(/^\d+\.\d+\.\d+/)
+		expect(result.version).toMatch(SEMVER_PREFIX_REGEX)
+		expect(result.installer).toMatch(SEMVER_PREFIX_REGEX)
 	})
 })

@@ -2,6 +2,9 @@ import { z } from 'zod'
 import type { Vault } from '../types'
 import { exec, ObsidianError } from '../exec'
 
+/** Matches "1.2.3 (installer 4.5.6)" version output */
+const VERSION_REGEX = /^([\d.]+)\s+\(installer\s+([\d.]+)\)$/
+
 const versionInfoSchema = z.object({
 	installer: z.string(),
 	version: z.string(),
@@ -18,7 +21,7 @@ export type VersionInfo = z.infer<typeof versionInfoSchema>
 export async function version(): Promise<VersionInfo> {
 	const result = await exec('version')
 
-	const match = /^([\d.]+)\s+\(installer\s+([\d.]+)\)$/.exec(result)
+	const match = VERSION_REGEX.exec(result)
 	if (!match) throw new ObsidianError(`Invalid version string: ${result}`, '', result, undefined)
 	return versionInfoSchema.parse({ installer: match[2], version: match[1] })
 }
