@@ -161,24 +161,30 @@ jobs:
 
           # Launch Obsidian via macOS `open` so Launch Services properly
           # resolves helper apps (renderer, GPU, plugin). CLI commands talk to
-          # this instance via IPC.
+          # this instance via IPC — without a running instance, CLI commands
+          # try to become the main instance, print Electron startup noise, and
+          # may hang or crash.
           open -a /Applications/Obsidian.app
-          sleep 5
+          sleep 10
+
+          # Verify Obsidian is actually running — if it crashed on launch,
+          # all CLI commands will fail.
+          if ! pgrep -f "Obsidian" > /dev/null; then
+            echo "::error::Obsidian failed to start — no process found"
+            exit 1
+          fi
+          echo "Obsidian is running (PID: $(pgrep -f 'Obsidian.app' | head -1))"
 
           # Create a wrapper script so `obsidian` resolves on PATH.
-          # Electron prints various diagnostics to stdout that corrupt CLI
-          # output (especially JSON responses). We filter aggressively:
-          #   - Timestamp lines: "2026-04-07 14:51:10 Loaded main app..."
-          #   - Chromium logs:   "[1234:0407/145112.023:ERROR:...]"
-          #   - Ignored errors:  "Ignored: Error: ..."
-          #   - Network errors:  "Error: net::ERR_FAILED"
-          #   - Stack traces:    "    at SimpleURLLoaderWrapper...."
-          #   - Update checks:   "Failed to check for update..."
-          # stderr is suppressed entirely.
+          # Electron prints diagnostics to both stdout and stderr that corrupt
+          # CLI output (especially JSON responses). Two-pronged approach:
+          #   1. --enable-logging=stderr forces Chromium's LOG() calls to stderr
+          #   2. stderr is redirected to /dev/null
+          #   3. Remaining stdout noise (Obsidian's own console.log) is filtered
           # shellcheck disable=SC2016
           printf '%s\n' \
             '#!/bin/bash' \
-            '/Applications/Obsidian.app/Contents/MacOS/Obsidian "$@" 2>/dev/null | grep -vE "^[0-9]{4}-[0-9]{2}-[0-9]{2} |^\[|^Ignored:|^Error: net::|^[[:space:]]+at |^Failed to |^[[:space:]]*$"' \
+            '/Applications/Obsidian.app/Contents/MacOS/Obsidian --enable-logging=stderr "$@" 2>/dev/null | grep -vE "^[0-9]{4}-[0-9]{2}-[0-9]{2} |^\[|^Ignored:|^Error: net::|^[[:space:]]+at |^Failed to |^Checking for |^Loaded main app"' \
             'exit "${PIPESTATUS[0]}"' \
             | sudo tee /usr/local/bin/obsidian > /dev/null
           sudo chmod +x /usr/local/bin/obsidian
