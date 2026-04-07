@@ -62,8 +62,6 @@ jobs:
           chmod +x /tmp/obsidian.AppImage
           cd /tmp && /tmp/obsidian.AppImage --appimage-extract
           sudo mv /tmp/squashfs-root /opt/obsidian
-          sudo chown root:root /opt/obsidian/chrome-sandbox
-          sudo chmod 4755 /opt/obsidian/chrome-sandbox
           sudo ln -s /opt/obsidian/obsidian /usr/local/bin/obsidian
           mkdir -p ~/.config/obsidian
           jq -n --arg name "$(basename "${OBSIDIAN_VAULT}")" --arg path "${GITHUB_WORKSPACE}/${OBSIDIAN_VAULT}" \
@@ -86,22 +84,23 @@ jobs:
         if: runner.os == 'Windows'
         run: echo "Obsidian CI install not yet supported on Windows. Skipping."
 
-      - name: Verify Obsidian (Linux)
+      - name: Start Obsidian (Linux)
         if: runner.os == 'Linux'
         run: |
           Xvfb -ac :99 -screen 0 1280x1024x16 &
           export DISPLAY=:99
           eval "$(dbus-launch --sh-syntax)"
+          obsidian --no-sandbox --disable-gpu &
+          sleep 5
           which obsidian
-          obsidian --version
           cat ~/.config/obsidian/obsidian.json
+          obsidian version
           obsidian vault
 
       - name: Test (Linux)
         if: runner.os == 'Linux'
         run: |
           export DISPLAY=:99
-          eval "$(dbus-launch --sh-syntax)"
           pnpm run test
 
       - name: Test (macOS)
