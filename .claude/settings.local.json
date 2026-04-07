@@ -33,7 +33,9 @@
       "Bash(pnpm ksc-tsconfig:*)",
       "Bash(npx tsc:*)",
       "Bash(pnpm ksc:*)",
-      "Bash(pnpm vitest:*)"
+      "Bash(pnpm vitest:*)",
+      "Bash(gh run:*)",
+      "Bash(gh api:*)"
     ]
   },
   "enabledMcpjsonServers": [

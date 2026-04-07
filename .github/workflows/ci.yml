@@ -15,6 +15,7 @@ concurrency:
 
 env:
   OBSIDIAN_VERSION: '1.12.7'
+  OBSIDIAN_VAULT: 'test/assets/obsidian-ts-test-vault'
 
 jobs:
   ci:
@@ -54,16 +55,17 @@ jobs:
       - name: Install Obsidian (Linux)
         if: runner.os == 'Linux'
         run: |
-          sudo apt update
-          sudo apt install flatpak dbus-x11 xvfb
-          flatpak remote-add --user flathub https://flathub.org/repo/flathub.flatpakrepo
-          flatpak install --user -y flathub md.obsidian.Obsidian
-
-      - name: Enable Obsidian CLI (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          CONFIG=~/.config/obsidian/obsidian.json
-          tmp=$(jq '.cli = true' "${CONFIG}") && echo "${tmp}" > "${CONFIG}"
+          sudo apt-get update
+          sudo apt-get install -y xvfb dbus-x11 libgtk-3-0 libnss3 libasound2t64 libgbm1 libsecret-1-0
+          wget -q "https://github.com/obsidianmd/obsidian-releases/releases/download/v${OBSIDIAN_VERSION}/Obsidian-${OBSIDIAN_VERSION}.AppImage" -O /tmp/obsidian.AppImage
+          chmod +x /tmp/obsidian.AppImage
+          cd /tmp && /tmp/obsidian.AppImage --appimage-extract
+          sudo mv /tmp/squashfs-root /opt/obsidian
+          sudo ln -s /opt/obsidian/obsidian /usr/local/bin/obsidian
+          mkdir -p ~/.config/obsidian
+          jq -n --arg name "$(basename "${OBSIDIAN_VAULT}")" --arg path "${GITHUB_WORKSPACE}/${OBSIDIAN_VAULT}" \
+            '{"vaults":{($name):{"path":$path,"ts":0,"open":true}},"cli":true}' \
+            > ~/.config/obsidian/obsidian.json
 
       - name: Install Obsidian (macOS)
         if: runner.os == 'macOS'
@@ -72,12 +74,10 @@ jobs:
           sudo hdiutil attach "Obsidian-${OBSIDIAN_VERSION}.dmg"
           sudo cp -rf "/Volumes/Obsidian ${OBSIDIAN_VERSION}-universal/Obsidian.app" /Applications
           sudo hdiutil detach "/Volumes/Obsidian ${OBSIDIAN_VERSION}-universal"
-
-      - name: Enable Obsidian CLI (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          CONFIG=~/Library/Application\ Support/obsidian/obsidian.json
-          tmp=$(jq '.cli = true' "${CONFIG}") && echo "${tmp}" > "${CONFIG}"
+          mkdir -p ~/Library/Application\ Support/obsidian
+          jq -n --arg name "$(basename "${OBSIDIAN_VAULT}")" --arg path "${GITHUB_WORKSPACE}/${OBSIDIAN_VAULT}" \
+            '{"vaults":{($name):{"path":$path,"ts":0,"open":true}},"cli":true}' \
+            > ~/Library/Application\ Support/obsidian/obsidian.json
 
       - name: Install Obsidian (Windows)
         if: runner.os == 'Windows'
