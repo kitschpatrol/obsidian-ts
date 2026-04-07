@@ -655,7 +655,7 @@ The output has been subject to only moderate post-facto human scrutiny.
 
 This project is just a thin wrapper over the Obsidian CLI. All credit to the [Obsidian team](https://obsidian.md/about)!
 
-Thanks to for a working approach to testing Obsidian in CI: <https://github.com/vslinko/obsidian-outliner/blob/6c69c88bf53168a4ec2e550c4ed2a3e78a229603/.github/workflows/build.yml#L36>
+Getting Obsidian CLI working in CI was a bit of an ordeal, which benefited from the insights in Lucas Traba's [obsidianless](https://github.com/lucastraba/obsidianless) project.
 
 <!-- contributing -->
 
