@@ -14,7 +14,6 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
-  ELECTRON_EXTRA_LAUNCH_ARGS: '--no-sandbox'
   OBSIDIAN_VERSION: '1.12.7'
   OBSIDIAN_VAULT: 'test/assets/obsidian-ts-test-vault'
 
@@ -63,6 +62,8 @@ jobs:
           chmod +x /tmp/obsidian.AppImage
           cd /tmp && /tmp/obsidian.AppImage --appimage-extract
           sudo mv /tmp/squashfs-root /opt/obsidian
+          sudo chown root:root /opt/obsidian/chrome-sandbox
+          sudo chmod 4755 /opt/obsidian/chrome-sandbox
           sudo ln -s /opt/obsidian/obsidian /usr/local/bin/obsidian
           mkdir -p ~/.config/obsidian
           jq -n --arg name "$(basename "${OBSIDIAN_VAULT}")" --arg path "${GITHUB_WORKSPACE}/${OBSIDIAN_VAULT}" \
