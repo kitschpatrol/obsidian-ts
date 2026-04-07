@@ -102,7 +102,7 @@ async function checkCompatibility(): Promise<boolean> {
 		resolvedCliVersion = parsed.version
 		return satisfies(resolvedCliVersion, OBSIDIAN_CLI_VERSION)
 	} catch (error) {
-		if (isSpawnError(error)) {
+		if (isSpawnError(error) || isNotFoundError(error)) {
 			throw new ObsidianNotFoundError(globalBinary)
 		}
 
@@ -222,10 +222,6 @@ export async function exec(
 
 		return output
 	} catch (error) {
-		if (isSpawnError(error)) {
-			throw new ObsidianNotFoundError(globalBinary)
-		}
-
 		if (error instanceof NonZeroExitError && error.output) {
 			throw new ObsidianError(
 				error.output.stderr.trim(),
@@ -236,15 +232,24 @@ export async function exec(
 			)
 		}
 
+		if (isSpawnError(error)) {
+			throw new ObsidianNotFoundError(globalBinary)
+		}
+
 		throw error
 	}
 }
 
 function isSpawnError(error: unknown): error is NodeJS.ErrnoException {
-	if (!(error instanceof Error)) return false
-	if ('code' in error && error.code === 'ENOENT') return true
-	// On Windows, spawn errors may surface with a different structure
-	// but still contain ENOENT in the message
-	if (error.message?.includes('ENOENT')) return true
-	return false
+	return error instanceof Error && 'code' in error && error.code === 'ENOENT'
+}
+
+/**
+ * On Windows, cross-spawn runs the binary through `cmd.exe` which exits with
+ * code 1 instead of ENOENT when the binary is not found.
+ */
+function isNotFoundError(error: unknown): boolean {
+	return (
+		error instanceof NonZeroExitError && error.output?.stderr.includes('is not recognized') === true
+	)
 }

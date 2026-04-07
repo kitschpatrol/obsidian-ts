@@ -1,5 +1,6 @@
 import { cpSync, existsSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
+import { clearDirectory } from './helpers'
 
 const vaultDirectory = join(import.meta.dirname, 'assets', 'obsidian-ts-test-vault')
 const backupDirectory = join(import.meta.dirname, 'assets', '.obsidian-ts-test-vault-backup')
@@ -20,7 +21,7 @@ export function setup(): void {
  */
 export function teardown(): void {
 	if (existsSync(backupDirectory)) {
-		rmSync(vaultDirectory, { recursive: true })
+		clearDirectory(vaultDirectory)
 		cpSync(backupDirectory, vaultDirectory, { recursive: true })
 		rmSync(backupDirectory, { recursive: true })
 	}
