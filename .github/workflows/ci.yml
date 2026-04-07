@@ -53,26 +53,66 @@ jobs:
       # - name: Lint
       #   run: pnpm run lint
 
-      # Install Obsidian via AppImage (not Flatpak, which uses a sandboxed config
-      # path). Extract the AppImage and symlink the binary onto PATH, then write
-      # obsidian.json to register the test vault and enable the CLI.
-      # See: https://github.com/lucastraba/obsidianless
-      - name: Install Obsidian (Linux)
+      # Install and start Obsidian on Linux using the AppImage distribution.
+      # We use AppImage instead of Flatpak because Flatpak sandboxes the config
+      # path (~/.var/app/md.obsidian.Obsidian/...) making it harder to pre-seed.
+      # Approach based on https://github.com/lucastraba/obsidianless
+      #
+      # Steps:
+      # 1. Install Electron runtime dependencies and Xvfb for a virtual display
+      # 2. Download and extract the AppImage
+      # 3. Symlink the binary onto PATH
+      # 4. Write obsidian.json to register the test vault and enable the CLI
+      # 5. Start Xvfb and launch Obsidian in the background (the CLI requires a
+      #    running Obsidian instance to communicate with via IPC)
+      # 6. Replace the symlink with a wrapper script that injects DISPLAY,
+      #    --no-sandbox, and filters noisy dbus errors for all CLI callers
+      # 7. Sanity-check with `obsidian version` and `obsidian vault`
+      - name: Setup Obsidian (Linux)
         if: runner.os == 'Linux'
         run: |
+          # Install Electron runtime deps and virtual display
           sudo apt-get update
           sudo apt-get install -y xvfb dbus-x11 libgtk-3-0 libnss3 libasound2t64 libgbm1 libsecret-1-0
+
+          # Download and extract the AppImage
           wget -q "https://github.com/obsidianmd/obsidian-releases/releases/download/v${OBSIDIAN_VERSION}/Obsidian-${OBSIDIAN_VERSION}.AppImage" -O /tmp/obsidian.AppImage
           chmod +x /tmp/obsidian.AppImage
           cd /tmp && /tmp/obsidian.AppImage --appimage-extract
           sudo mv /tmp/squashfs-root /opt/obsidian
           sudo ln -s /opt/obsidian/obsidian /usr/local/bin/obsidian
+
+          # Write obsidian.json to register the test vault and enable the CLI.
+          # Normally this is done via Settings > General, but we pre-seed it here.
+          # The "cli" key was found by reverse-engineering obsidian.asar.
           mkdir -p ~/.config/obsidian
           jq -n --arg name "$(basename "${OBSIDIAN_VAULT}")" --arg path "${GITHUB_WORKSPACE}/${OBSIDIAN_VAULT}" \
             '{"vaults":{($name):{"path":$path,"ts":0,"open":true}},"cli":true}' \
             > ~/.config/obsidian/obsidian.json
 
-      - name: Install Obsidian (macOS)
+          # Start a virtual display for the Electron-based CLI
+          Xvfb -ac :99 -screen 0 1280x1024x16 &
+
+          # Launch Obsidian in the background — the CLI talks to this instance via IPC.
+          # --no-sandbox: extracted AppImage lacks a properly configured chrome-sandbox
+          # --disable-gpu: no real GPU in CI
+          DISPLAY=:99 /usr/local/bin/obsidian --no-sandbox --disable-gpu &
+          sleep 5
+
+          # Replace the symlink with a wrapper script so all downstream callers
+          # (including obsidian-ts) get DISPLAY / --no-sandbox automatically and
+          # don't see noisy dbus errors in their output.
+          sudo mv /usr/local/bin/obsidian /usr/local/bin/obsidian-real
+          printf '#!/bin/bash\nDISPLAY=:99 /usr/local/bin/obsidian-real --no-sandbox "$@" 2>&1 | grep -v "ERROR:dbus/bus.cc"\n' | sudo tee /usr/local/bin/obsidian > /dev/null
+          sudo chmod +x /usr/local/bin/obsidian
+
+          # Sanity checks
+          which obsidian
+          cat ~/.config/obsidian/obsidian.json
+          obsidian version
+          obsidian vault
+
+      - name: Setup Obsidian (macOS)
         if: runner.os == 'macOS'
         run: |
           wget -q "https://github.com/obsidianmd/obsidian-releases/releases/download/v${OBSIDIAN_VERSION}/Obsidian-${OBSIDIAN_VERSION}.dmg"
@@ -84,32 +124,9 @@ jobs:
             '{"vaults":{($name):{"path":$path,"ts":0,"open":true}},"cli":true}' \
             > ~/Library/Application\ Support/obsidian/obsidian.json
 
-      - name: Install Obsidian (Windows)
+      - name: Setup Obsidian (Windows)
         if: runner.os == 'Windows'
-        run: echo "Obsidian CI install not yet supported on Windows. Skipping."
-
-      # The Obsidian CLI requires a running Obsidian instance to communicate
-      # with via IPC. Start Xvfb for a virtual display, then launch Obsidian
-      # in the background with --no-sandbox and --disable-gpu for CI.
-      # Wrap the binary so all CLI calls get DISPLAY, --no-sandbox, and
-      # dbus error filtering automatically.
-      - name: Start Obsidian (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          Xvfb -ac :99 -screen 0 1280x1024x16 &
-          DISPLAY=:99 /usr/local/bin/obsidian --no-sandbox --disable-gpu &
-          sleep 5
-          sudo mv /usr/local/bin/obsidian /usr/local/bin/obsidian-real
-          printf '#!/bin/bash\nDISPLAY=:99 /usr/local/bin/obsidian-real --no-sandbox "$@" 2>&1 | grep -v "ERROR:dbus/bus.cc"\n' | sudo tee /usr/local/bin/obsidian > /dev/null
-          sudo chmod +x /usr/local/bin/obsidian
-
-      - name: Verify Obsidian (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          which obsidian
-          cat ~/.config/obsidian/obsidian.json
-          obsidian version
-          obsidian vault
+        run: echo "Obsidian CI setup not yet supported on Windows. Skipping."
 
       - name: Test (Linux)
         if: runner.os == 'Linux'
