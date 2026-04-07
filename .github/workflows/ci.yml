@@ -25,8 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        # os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
       - name: Checkout
@@ -177,10 +176,75 @@ jobs:
             | sudo tee /usr/local/bin/obsidian > /dev/null
           sudo chmod +x /usr/local/bin/obsidian
 
-      # TODO: Windows support — config path is %APPDATA%/obsidian/obsidian.json
+      # Install Obsidian on Windows from the official .exe installer.
+      # Same IPC pattern as Linux/macOS: pre-seed config, launch a background
+      # instance, then CLI commands talk to it via IPC.
+      #
+      # Overview:
+      # 1. Download and silently install the .exe (/S flag for NSIS)
+      # 2. Write obsidian.json to register the test vault and enable the CLI
+      # 3. Add the install directory to PATH so `obsidian` resolves
+      # 4. Launch Obsidian in the background for IPC
+      # 5. Create a wrapper batch file to suppress stderr noise
+      #
+      # Config path: %APPDATA%\obsidian\obsidian.json
       - name: Setup Obsidian (Windows)
         if: runner.os == 'Windows'
-        run: echo "Obsidian CI setup not yet supported on Windows. Skipping."
+        shell: pwsh
+        run: |
+          # Download the installer
+          Invoke-WebRequest -Uri "https://github.com/obsidianmd/obsidian-releases/releases/download/v$env:OBSIDIAN_VERSION/Obsidian-$env:OBSIDIAN_VERSION.exe" -OutFile "$env:TEMP\Obsidian-Setup.exe"
+
+          # Run silent install (NSIS /S flag)
+          Start-Process -FilePath "$env:TEMP\Obsidian-Setup.exe" -ArgumentList "/S" -Wait
+          Start-Sleep -Seconds 5
+
+          # Find the installed binary
+          $obsidianDir = "$env:LOCALAPPDATA\Obsidian"
+          if (-not (Test-Path "$obsidianDir\Obsidian.exe")) {
+            Write-Error "Obsidian.exe not found at $obsidianDir"
+            Get-ChildItem $obsidianDir -Recurse -ErrorAction SilentlyContinue | Select-Object FullName
+            exit 1
+          }
+          Write-Host "Obsidian installed at $obsidianDir"
+
+          # Pre-seed obsidian.json to register the test vault and enable CLI
+          $configDir = "$env:APPDATA\obsidian"
+          New-Item -ItemType Directory -Force -Path $configDir | Out-Null
+          $vaultName = Split-Path $env:OBSIDIAN_VAULT -Leaf
+          $vaultPath = "$env:GITHUB_WORKSPACE/$env:OBSIDIAN_VAULT" -replace '\\','/'
+          $config = @{
+            vaults = @{
+              $vaultName = @{
+                path = $vaultPath
+                ts = 0
+                open = $true
+              }
+            }
+            cli = $true
+          } | ConvertTo-Json -Depth 3
+          [System.IO.File]::WriteAllText("$configDir\obsidian.json", $config)
+          Write-Host "Config written to $configDir\obsidian.json"
+          Get-Content "$configDir\obsidian.json"
+
+          # Launch Obsidian in the background so CLI commands have an instance
+          # to talk to via IPC
+          Start-Process -FilePath "$obsidianDir\Obsidian.exe"
+          Start-Sleep -Seconds 10
+
+          # Verify Obsidian is running
+          $proc = Get-Process -Name "Obsidian" -ErrorAction SilentlyContinue
+          if (-not $proc) {
+            Write-Error "Obsidian failed to start — no process found"
+            exit 1
+          }
+          Write-Host "Obsidian is running (PID: $($proc[0].Id))"
+
+          # Create a wrapper batch file so `obsidian` resolves on PATH.
+          # Place it in a directory already on PATH (C:\Windows).
+          $wrapper = "@echo off`r`n`"$obsidianDir\Obsidian.exe`" %* 2>nul"
+          [System.IO.File]::WriteAllText("C:\Windows\obsidian.cmd", $wrapper)
+          Write-Host "Wrapper created at C:\Windows\obsidian.cmd"
 
       - name: Test (Linux)
         if: runner.os == 'Linux'
@@ -192,4 +256,4 @@ jobs:
 
       - name: Test (Windows)
         if: runner.os == 'Windows'
-        run: echo "Testing not yet supported on Windows. Skipping."
+        run: pnpm run test
