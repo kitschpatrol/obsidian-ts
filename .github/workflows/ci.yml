@@ -48,8 +48,8 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      # - name: Lint
-      #   run: pnpm run lint
+      - name: Lint
+        run: pnpm run lint
 
       - name: Setup Obsidian
         uses: ./.github/actions/setup-obsidian
