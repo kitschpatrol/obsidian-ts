@@ -229,6 +229,24 @@ jobs:
         if: runner.os == 'Linux'
         run: pnpm run test
 
+      - name: Debug raw Obsidian CLI output (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          echo "=== Raw 'obsidian version' (unfiltered) ==="
+          /Applications/Obsidian.app/Contents/MacOS/Obsidian --enable-logging=stderr version 2>/dev/null || true
+          echo ""
+          echo "=== Raw 'obsidian version' (with stderr) ==="
+          /Applications/Obsidian.app/Contents/MacOS/Obsidian version 2>&1 || true
+          echo ""
+          echo "=== Raw 'obsidian vault=${OBSIDIAN_VAULT} plugins versions' (JSON command, unfiltered) ==="
+          /Applications/Obsidian.app/Contents/MacOS/Obsidian --enable-logging=stderr vault=obsidian-ts-test-vault plugins versions 2>/dev/null || true
+          echo ""
+          echo "=== Raw 'obsidian vault=${OBSIDIAN_VAULT} files' (list command, unfiltered) ==="
+          /Applications/Obsidian.app/Contents/MacOS/Obsidian --enable-logging=stderr vault=obsidian-ts-test-vault files 2>/dev/null || true
+          echo ""
+          echo "=== Hexdump of first 200 bytes of 'version' output ==="
+          /Applications/Obsidian.app/Contents/MacOS/Obsidian --enable-logging=stderr version 2>/dev/null | head -c 200 | xxd || true
+
       - name: Test (macOS)
         if: runner.os == 'macOS'
         run: pnpm run test
