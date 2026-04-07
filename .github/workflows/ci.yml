@@ -14,6 +14,7 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
+  ELECTRON_EXTRA_LAUNCH_ARGS: '--no-sandbox'
   OBSIDIAN_VERSION: '1.12.7'
   OBSIDIAN_VAULT: 'test/assets/obsidian-ts-test-vault'
 
