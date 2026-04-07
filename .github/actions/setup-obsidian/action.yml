@@ -14,6 +14,14 @@ inputs:
       (e.g. "test/assets/my-vault")
     required: true
 
+outputs:
+  cli-path:
+    description: Absolute path to the Obsidian CLI binary
+    value: ${{ steps.resolve-cli.outputs.cli-path }}
+  vault-path:
+    description: Absolute path to the registered vault directory
+    value: ${{ steps.resolve-cli.outputs.vault-path }}
+
 runs:
   using: composite
   steps:
@@ -243,3 +251,17 @@ runs:
         & $obsidianExe version 2>$null
         Write-Host "Warmup complete (exit: $LASTEXITCODE)"
         Start-Sleep -Seconds 2
+
+    # ── Export outputs ───────────────────────────────────────────────────
+    - name: Set outputs
+      id: resolve-cli
+      shell: bash
+      env:
+        OBSIDIAN_VAULT: ${{ inputs.vault }}
+      run: |
+        cli_path="$(which obsidian 2>/dev/null || command -v obsidian 2>/dev/null || echo '')"
+        vault_path="${GITHUB_WORKSPACE}/${OBSIDIAN_VAULT}"
+        echo "cli-path=${cli_path}" >> "$GITHUB_OUTPUT"
+        echo "vault-path=${vault_path}" >> "$GITHUB_OUTPUT"
+        echo "CLI path: ${cli_path}"
+        echo "Vault path: ${vault_path}"
