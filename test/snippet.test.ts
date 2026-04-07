@@ -7,12 +7,12 @@ beforeAll(() => {
 	backupVault()
 })
 
-afterAll(() => {
-	restoreVault()
+afterAll(async () => {
+	await restoreVault()
 })
 
 describe('list', () => {
-	it('lists installed CSS snippets', { retry: 10 }, async () => {
+	it('lists installed CSS snippets', async () => {
 		const snippets = await snippet.list()
 		expect(snippets).toContain('test-snippet')
 	})
@@ -29,7 +29,7 @@ describe('enabled', () => {
 })
 
 describe('enable and disable', () => {
-	it('enables then disables a snippet', { retry: 10 }, async () => {
+	it('enables then disables a snippet', async () => {
 		await snippet.enable({ name: 'test-snippet' })
 		const afterEnable = await snippet.enabled()
 		expect(afterEnable).toContain('test-snippet')

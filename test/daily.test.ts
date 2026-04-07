@@ -26,7 +26,7 @@ afterAll(async () => {
 		})
 	}
 
-	restoreVault()
+	await restoreVault()
 })
 
 describe('path', () => {

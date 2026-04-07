@@ -2,7 +2,7 @@ import { cpSync, mkdtempSync, readdirSync, rmSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { configure } from '../src/exec'
+import { configure, exec } from '../src/exec'
 
 export const VAULT_NAME = 'obsidian-ts-test-vault'
 export const VAULT_DIR = join(import.meta.dirname, 'assets', 'obsidian-ts-test-vault')
@@ -28,14 +28,21 @@ export function backupVault(): void {
 /**
  * Restore the fixture vault from the temp backup after write tests. Call this
  * in an `afterAll` for test files that modify vault contents.
+ *
+ * After restoring files, reloads the vault so Obsidian re-indexes the
+ * restored contents. On Linux, inotify watchers on subdirectories
+ * (e.g. `.obsidian/snippets/`) are lost when `clearDirectory` removes
+ * and recreates them — without reload, Obsidian never re-scans.
  */
-export function restoreVault(): void {
+export async function restoreVault(): Promise<void> {
 	if (!backupDirectory) return
 
 	clearDirectory(VAULT_DIR)
 	cpSync(backupDirectory, VAULT_DIR, { recursive: true })
 	rmSync(backupDirectory, { recursive: true })
 	backupDirectory = undefined
+
+	await exec('reload')
 }
 
 /**
