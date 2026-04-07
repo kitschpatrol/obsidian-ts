@@ -28,7 +28,12 @@
       "Bash(/tmp/dev_patch.py:*)",
       "Bash(/tmp/file_patch.py:*)",
       "Bash(/tmp/fix_bookmark.py:*)",
-      "WebFetch(domain:zod.dev)"
+      "WebFetch(domain:zod.dev)",
+      "Bash(trash:*)",
+      "Bash(pnpm ksc-tsconfig:*)",
+      "Bash(npx tsc:*)",
+      "Bash(pnpm ksc:*)",
+      "Bash(pnpm vitest:*)"
     ]
   },
   "enabledMcpjsonServers": [

@@ -1,17 +1,15 @@
 import type { Simplify } from 'type-fest'
 import { z } from 'zod'
-import type { JsonValue } from '../parse'
 import type { FileOrPath, Vault } from '../types'
 import { exec } from '../exec'
-import { parseJson, parseLines, parseNumber, stripPrefix } from '../parse'
+import { parseJsonWith, parseLines, parseNumber, stripPrefix } from '../parse'
 
-// TODO unused?
-const _propertyInfoSchema = z.object({
+const propertyInfoSchema = z.object({
 	count: z.coerce.number(),
 	name: z.string(),
 	type: z.string(),
 })
-export type PropertyInfo = z.infer<typeof _propertyInfoSchema>
+export type PropertyInfo = z.infer<typeof propertyInfoSchema>
 
 export type PropertyListOptions = Simplify<
 	FileOrPath &
@@ -39,9 +37,6 @@ export type PropertyAliasesOptions = Simplify<FileOrPath & Vault & { active?: bo
 
 /**
  * List properties in the vault or for a specific file.
- * TODO arguments change output type!
- * propertyInfoSchema if whole vault, otherwise
- * individual property items is file
  *
  * CLI command: `properties`
  * @param options - Command options.
@@ -53,7 +48,7 @@ export type PropertyAliasesOptions = Simplify<FileOrPath & Vault & { active?: bo
  * @returns Array of property objects with name, type, and count.
  * @throws {ObsidianError} if the CLI returns an error.
  */
-export async function list(options?: PropertyListOptions): Promise<JsonValue> {
+export async function list(options?: PropertyListOptions): Promise<PropertyInfo[]> {
 	const parameters: Record<string, number | string> = { format: 'json' }
 	if (options?.file) parameters.file = options.file
 	if (options?.path) parameters.path = options.path
@@ -69,7 +64,7 @@ export async function list(options?: PropertyListOptions): Promise<JsonValue> {
 		return []
 	}
 
-	return parseJson(output)
+	return parseJsonWith(output, z.array(propertyInfoSchema))
 }
 
 /**

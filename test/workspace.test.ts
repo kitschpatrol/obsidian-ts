@@ -43,5 +43,4 @@ describe('recentTotal', () => {
 })
 
 // Note: workspace:save, workspaces (list), workspace:delete, and workspace:load
-// commands are not available in the current Obsidian CLI version (1.12.4).
-// The library defines these functions but they return error messages in stdout.
+// commands were unavailable in Obsidian CLI 1.12.4 but are available in 1.12.7+.

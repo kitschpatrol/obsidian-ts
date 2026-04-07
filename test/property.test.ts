@@ -1,8 +1,3 @@
-/* eslint-disable ts/no-unsafe-return */
-/* eslint-disable ts/no-unsafe-assignment */
-/* eslint-disable ts/no-unsafe-call */
-/* eslint-disable ts/no-unsafe-member-access */
-
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import * as file from '../src/commands/file'
 import * as property from '../src/commands/property'

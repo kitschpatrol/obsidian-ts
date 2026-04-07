@@ -3,7 +3,7 @@ import { NonZeroExitError, x } from 'tinyexec'
 import { log } from './log'
 
 const OBSIDIAN_CLI_DOCS_URL = 'https://help.obsidian.md/cli'
-const OBSIDIAN_CLI_VERSION = '^1.12.4'
+const OBSIDIAN_CLI_VERSION = '^1.12.7'
 
 /**
  * Error thrown when the Obsidian CLI returns a non-zero exit code or when CLI

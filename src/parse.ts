@@ -1,5 +1,4 @@
 import type { ZodType } from 'zod'
-import { z } from 'zod'
 
 /**
  * Parse key-value output into a typed record.
@@ -49,15 +48,6 @@ export function parseLines(output: string): string[] {
  */
 export function parseKeyValueWith<T>(output: string, schema: ZodType<T>): T {
 	return schema.parse(parseKeyValue(output))
-}
-
-export type JsonValue = z.infer<ReturnType<typeof z.json>>
-
-/**
- * Simple json parse with better types
- */
-export function parseJson(jsonString: string): JsonValue {
-	return z.json().parse(JSON.parse(jsonString))
 }
 
 /**
