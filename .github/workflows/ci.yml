@@ -53,6 +53,10 @@ jobs:
       # - name: Lint
       #   run: pnpm run lint
 
+      # Install Obsidian via AppImage (not Flatpak, which uses a sandboxed config
+      # path). Extract the AppImage and symlink the binary onto PATH, then write
+      # obsidian.json to register the test vault and enable the CLI.
+      # See: https://github.com/lucastraba/obsidianless
       - name: Install Obsidian (Linux)
         if: runner.os == 'Linux'
         run: |
@@ -84,14 +88,21 @@ jobs:
         if: runner.os == 'Windows'
         run: echo "Obsidian CI install not yet supported on Windows. Skipping."
 
-      - name: Start Obsidian (Linux)
+      # Every Obsidian CLI call launches the Electron binary, which needs a
+      # virtual display, sandbox bypass, and produces noisy dbus errors. Wrap
+      # the real binary in a script that handles all of this so downstream
+      # callers (including obsidian-ts) just call `obsidian` normally.
+      - name: Setup Obsidian wrapper (Linux)
         if: runner.os == 'Linux'
         run: |
           Xvfb -ac :99 -screen 0 1280x1024x16 &
-          export DISPLAY=:99
-          eval "$(dbus-launch --sh-syntax)"
-          obsidian --no-sandbox --disable-gpu &
-          sleep 5
+          sudo mv /usr/local/bin/obsidian /usr/local/bin/obsidian-real
+          printf '#!/bin/bash\nDISPLAY=:99 /usr/local/bin/obsidian-real --no-sandbox "$@" 2>&1 | grep -v "ERROR:dbus/bus.cc"\n' | sudo tee /usr/local/bin/obsidian > /dev/null
+          sudo chmod +x /usr/local/bin/obsidian
+
+      - name: Verify Obsidian (Linux)
+        if: runner.os == 'Linux'
+        run: |
           which obsidian
           cat ~/.config/obsidian/obsidian.json
           obsidian version
@@ -99,9 +110,7 @@ jobs:
 
       - name: Test (Linux)
         if: runner.os == 'Linux'
-        run: |
-          export DISPLAY=:99
-          pnpm run test
+        run: pnpm run test
 
       - name: Test (macOS)
         if: runner.os == 'macOS'
