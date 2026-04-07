@@ -126,10 +126,23 @@ jobs:
       #
       # Overview:
       # 1. Download and mount the .dmg, copy the app to /Applications
-      # 2. Remove macOS quarantine so the unsigned app can launch
+      # 2. Remove macOS quarantine and ad-hoc re-sign the app bundle
       # 3. Write obsidian.json to register the test vault and enable the CLI
       # 4. Symlink the binary onto PATH so `obsidian` resolves
       # 5. Launch Obsidian in the background for IPC
+      #
+      # Key flags:
+      # --no-sandbox: avoids helper-process sandboxing issues in CI
+      # --disable-gpu --in-process-gpu: no real GPU in CI; --in-process-gpu
+      #   prevents Electron from spawning a separate GPU helper process that
+      #   would crash with "GPU process isn't usable"
+      #
+      # ditto is used instead of cp to preserve macOS bundle metadata (resource
+      # forks, extended attributes, symlinks) that Electron helper apps need.
+      # After copying, we ad-hoc re-sign so macOS allows the helper processes
+      # (renderer, GPU, plugin) to launch — without this they fail with
+      # "Unable to find helper app".
+      #
       # Config path: ~/Library/Application Support/obsidian/obsidian.json
       - name: Setup Obsidian (macOS)
         if: runner.os == 'macOS'
@@ -137,11 +150,13 @@ jobs:
           # Download and mount the .dmg, copy the app to /Applications
           curl -fsSL "https://github.com/obsidianmd/obsidian-releases/releases/download/v${OBSIDIAN_VERSION}/Obsidian-${OBSIDIAN_VERSION}.dmg" -o /tmp/Obsidian.dmg
           sudo hdiutil attach /tmp/Obsidian.dmg -nobrowse
-          sudo cp -rf "/Volumes/Obsidian ${OBSIDIAN_VERSION}-universal/Obsidian.app" /Applications
+          sudo ditto "/Volumes/Obsidian ${OBSIDIAN_VERSION}-universal/Obsidian.app" /Applications/Obsidian.app
           sudo hdiutil detach "/Volumes/Obsidian ${OBSIDIAN_VERSION}-universal"
 
-          # Remove quarantine attribute so the app can launch without Gatekeeper
+          # Remove quarantine and ad-hoc re-sign the entire bundle so macOS
+          # allows the Electron helper processes to launch
           sudo xattr -rd com.apple.quarantine /Applications/Obsidian.app
+          sudo codesign --force --deep --sign - /Applications/Obsidian.app
 
           # Pre-seed obsidian.json (same format as Linux, different path)
           mkdir -p ~/Library/Application\ Support/obsidian
@@ -155,7 +170,7 @@ jobs:
           # Launch Obsidian in the background so CLI commands have an instance to
           # talk to via IPC. Without this, CLI commands become the main instance
           # and hang waiting for GUI interaction.
-          /usr/local/bin/obsidian --disable-gpu &
+          /usr/local/bin/obsidian --no-sandbox --disable-gpu --in-process-gpu &
           sleep 5
 
       # TODO: Windows support — config path is %APPDATA%/obsidian/obsidian.json
