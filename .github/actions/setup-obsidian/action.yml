@@ -1,0 +1,218 @@
+name: Setup Obsidian
+description: >
+  Install the Obsidian desktop app, register a vault, enable the CLI, and
+  launch a background instance so CLI commands can communicate via IPC.
+  Supports Linux, macOS, and Windows.
+
+inputs:
+  version:
+    description: Obsidian version to install (e.g. "1.12.7")
+    required: true
+  vault:
+    description: >
+      Path to the vault directory, relative to the repository root
+      (e.g. "test/assets/my-vault")
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # ── Cache the downloaded installer artifact ──────────────────────────
+    - name: Cache Obsidian installer
+      uses: actions/cache@v4
+      id: cache-obsidian
+      with:
+        path: ${{ runner.temp }}/obsidian-installer
+        key: obsidian-${{ inputs.version }}-${{ runner.os }}
+
+    # ── Linux ────────────────────────────────────────────────────────────
+    # Uses the AppImage distribution. Approach based on
+    # https://github.com/lucastraba/obsidianless
+    #
+    # Key flags:
+    # --no-sandbox  extracted AppImage's chrome-sandbox lacks SUID root
+    # --disable-gpu no real GPU in CI
+    #
+    # The wrapper filters noisy dbus stderr and preserves the real exit
+    # code via PIPESTATUS.
+    - name: Install Obsidian (Linux)
+      if: runner.os == 'Linux'
+      shell: bash
+      env:
+        OBSIDIAN_VERSION: ${{ inputs.version }}
+        OBSIDIAN_VAULT: ${{ inputs.vault }}
+        CACHE_HIT: ${{ steps.cache-obsidian.outputs.cache-hit }}
+      run: |
+        # Install Electron runtime deps and Xvfb virtual display server
+        sudo apt-get update
+        sudo apt-get install -y xvfb dbus-x11 libgtk-3-0 libnss3 libasound2t64 libgbm1 libsecret-1-0
+
+        # Download the AppImage (unless cached)
+        mkdir -p "$RUNNER_TEMP/obsidian-installer"
+        if [ "$CACHE_HIT" != "true" ]; then
+          wget -q "https://github.com/obsidianmd/obsidian-releases/releases/download/v${OBSIDIAN_VERSION}/Obsidian-${OBSIDIAN_VERSION}.AppImage" \
+            -O "$RUNNER_TEMP/obsidian-installer/obsidian.AppImage"
+        fi
+
+        # Extract and install
+        chmod +x "$RUNNER_TEMP/obsidian-installer/obsidian.AppImage"
+        cd /tmp && "$RUNNER_TEMP/obsidian-installer/obsidian.AppImage" --appimage-extract
+        sudo mv /tmp/squashfs-root /opt/obsidian
+        sudo ln -s /opt/obsidian/obsidian /usr/local/bin/obsidian
+
+        # Pre-seed obsidian.json to register the test vault and enable CLI
+        mkdir -p ~/.config/obsidian
+        jq -n --arg name "$(basename "${OBSIDIAN_VAULT}")" --arg path "${GITHUB_WORKSPACE}/${OBSIDIAN_VAULT}" \
+          '{"vaults":{($name):{"path":$path,"ts":0,"open":true}},"cli":true}' \
+          > ~/.config/obsidian/obsidian.json
+
+        # Start Xvfb — Electron requires a display even for headless CLI
+        Xvfb -ac :99 -screen 0 1280x1024x16 &
+
+        # Launch Obsidian in the background for IPC
+        DISPLAY=:99 /usr/local/bin/obsidian --no-sandbox --disable-gpu &
+        sleep 5
+
+        # Replace symlink with a wrapper script that sets DISPLAY,
+        # --no-sandbox, and filters dbus noise from stderr
+        sudo mv /usr/local/bin/obsidian /usr/local/bin/obsidian-real
+        # shellcheck disable=SC2016
+        printf '%s\n' \
+          '#!/bin/bash' \
+          'DISPLAY=:99 /usr/local/bin/obsidian-real --no-sandbox "$@" 2>&1 | grep -v "ERROR:dbus/bus.cc"' \
+          'exit "${PIPESTATUS[0]}"' \
+          | sudo tee /usr/local/bin/obsidian > /dev/null
+        sudo chmod +x /usr/local/bin/obsidian
+
+    # ── macOS ────────────────────────────────────────────────────────────
+    # Uses the .dmg distribution. `ditto` preserves bundle metadata and
+    # `open -a` launches via Launch Services so Electron helper processes
+    # (renderer, GPU, plugin) resolve correctly — calling the binary
+    # directly causes "Unable to find helper app" FATAL errors.
+    - name: Install Obsidian (macOS)
+      if: runner.os == 'macOS'
+      shell: bash
+      env:
+        OBSIDIAN_VERSION: ${{ inputs.version }}
+        OBSIDIAN_VAULT: ${{ inputs.vault }}
+        CACHE_HIT: ${{ steps.cache-obsidian.outputs.cache-hit }}
+      run: |
+        # Download the .dmg (unless cached)
+        mkdir -p "$RUNNER_TEMP/obsidian-installer"
+        if [ "$CACHE_HIT" != "true" ]; then
+          curl -fsSL "https://github.com/obsidianmd/obsidian-releases/releases/download/v${OBSIDIAN_VERSION}/Obsidian-${OBSIDIAN_VERSION}.dmg" \
+            -o "$RUNNER_TEMP/obsidian-installer/Obsidian.dmg"
+        fi
+
+        # Mount, copy, unmount
+        sudo hdiutil attach "$RUNNER_TEMP/obsidian-installer/Obsidian.dmg" -nobrowse
+        sudo ditto "/Volumes/Obsidian ${OBSIDIAN_VERSION}-universal/Obsidian.app" /Applications/Obsidian.app
+        sudo hdiutil detach "/Volumes/Obsidian ${OBSIDIAN_VERSION}-universal"
+
+        # Remove quarantine so the app can launch without Gatekeeper
+        sudo xattr -rd com.apple.quarantine /Applications/Obsidian.app
+
+        # Pre-seed obsidian.json
+        mkdir -p ~/Library/Application\ Support/obsidian
+        jq -n --arg name "$(basename "${OBSIDIAN_VAULT}")" --arg path "${GITHUB_WORKSPACE}/${OBSIDIAN_VAULT}" \
+          '{"vaults":{($name):{"path":$path,"ts":0,"open":true}},"cli":true}' \
+          > ~/Library/Application\ Support/obsidian/obsidian.json
+
+        # Launch via `open` for proper helper process resolution
+        open -a /Applications/Obsidian.app
+        sleep 10
+
+        # Verify Obsidian is running
+        if ! pgrep -f "Obsidian" > /dev/null; then
+          echo "::error::Obsidian failed to start — no process found"
+          exit 1
+        fi
+        echo "Obsidian is running (PID: $(pgrep -f 'Obsidian.app' | head -1))"
+
+        # Create wrapper so `obsidian` resolves on PATH
+        # shellcheck disable=SC2016
+        printf '%s\n' \
+          '#!/bin/bash' \
+          '/Applications/Obsidian.app/Contents/MacOS/Obsidian "$@" 2>/dev/null' \
+          | sudo tee /usr/local/bin/obsidian > /dev/null
+        sudo chmod +x /usr/local/bin/obsidian
+
+    # ── Windows ──────────────────────────────────────────────────────────
+    # Uses the .exe NSIS installer with /S for silent install. The install
+    # directory is added to PATH via GITHUB_PATH (not a .cmd wrapper)
+    # because Node.js child_process.spawn can't resolve .cmd files.
+    - name: Install Obsidian (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      env:
+        OBSIDIAN_VERSION: ${{ inputs.version }}
+        OBSIDIAN_VAULT: ${{ inputs.vault }}
+        CACHE_HIT: ${{ steps.cache-obsidian.outputs.cache-hit }}
+      run: |
+        # Download the installer (unless cached)
+        New-Item -ItemType Directory -Force -Path "$env:RUNNER_TEMP\obsidian-installer" | Out-Null
+        if ($env:CACHE_HIT -ne "true") {
+          Invoke-WebRequest -Uri "https://github.com/obsidianmd/obsidian-releases/releases/download/v$env:OBSIDIAN_VERSION/Obsidian-$env:OBSIDIAN_VERSION.exe" `
+            -OutFile "$env:RUNNER_TEMP\obsidian-installer\Obsidian-Setup.exe"
+        }
+
+        # Run silent install
+        Start-Process -FilePath "$env:RUNNER_TEMP\obsidian-installer\Obsidian-Setup.exe" -ArgumentList "/S" -Wait
+        Start-Sleep -Seconds 5
+
+        # Find the installed binary
+        $searchPaths = @(
+          "$env:LOCALAPPDATA\Obsidian",
+          "$env:LOCALAPPDATA\Programs\Obsidian",
+          "$env:LOCALAPPDATA\obsidian",
+          "$env:ProgramFiles\Obsidian",
+          "${env:ProgramFiles(x86)}\Obsidian"
+        )
+        $obsidianExe = $null
+        foreach ($dir in $searchPaths) {
+          $candidate = Join-Path $dir "Obsidian.exe"
+          if (Test-Path $candidate) {
+            $obsidianExe = $candidate
+            $obsidianDir = $dir
+            break
+          }
+        }
+        if (-not $obsidianExe) {
+          Write-Host "Searching for Obsidian.exe..."
+          Get-ChildItem -Path C:\ -Filter "Obsidian.exe" -Recurse -ErrorAction SilentlyContinue -Depth 5 | Select-Object FullName
+          Write-Error "Obsidian.exe not found after installation"
+          exit 1
+        }
+        Write-Host "Obsidian installed at $obsidianDir"
+
+        # Pre-seed obsidian.json
+        $configDir = "$env:APPDATA\obsidian"
+        New-Item -ItemType Directory -Force -Path $configDir | Out-Null
+        $vaultName = Split-Path $env:OBSIDIAN_VAULT -Leaf
+        $vaultPath = "$env:GITHUB_WORKSPACE/$env:OBSIDIAN_VAULT" -replace '\\','/'
+        $config = @{
+          vaults = @{
+            $vaultName = @{
+              path = $vaultPath
+              ts = 0
+              open = $true
+            }
+          }
+          cli = $true
+        } | ConvertTo-Json -Depth 3
+        [System.IO.File]::WriteAllText("$configDir\obsidian.json", $config)
+
+        # Add to PATH for subsequent steps
+        echo $obsidianDir >> $env:GITHUB_PATH
+
+        # Launch Obsidian in the background for IPC
+        Start-Process -FilePath $obsidianExe
+        Start-Sleep -Seconds 10
+
+        # Verify Obsidian is running
+        $proc = Get-Process -Name "Obsidian" -ErrorAction SilentlyContinue
+        if (-not $proc) {
+          Write-Error "Obsidian failed to start — no process found"
+          exit 1
+        }
+        Write-Host "Obsidian is running (PID: $($proc[0].Id))"
