@@ -149,18 +149,28 @@ runs:
         OBSIDIAN_VAULT: ${{ inputs.vault }}
         CACHE_HIT: ${{ steps.cache-obsidian.outputs.cache-hit }}
       run: |
-        # Download the installer (unless cached)
+        # Download the installer (unless cached), then always run it.
+        # The cache stores the downloaded .exe, not the installed app.
         New-Item -ItemType Directory -Force -Path "$env:RUNNER_TEMP\obsidian-installer" | Out-Null
         if ($env:CACHE_HIT -ne "true") {
           Invoke-WebRequest -Uri "https://github.com/obsidianmd/obsidian-releases/releases/download/v$env:OBSIDIAN_VERSION/Obsidian-$env:OBSIDIAN_VERSION.exe" `
             -OutFile "$env:RUNNER_TEMP\obsidian-installer\Obsidian-Setup.exe"
+        } else {
+          Write-Host "Using cached installer"
         }
 
-        # Run silent install
-        Start-Process -FilePath "$env:RUNNER_TEMP\obsidian-installer\Obsidian-Setup.exe" -ArgumentList "/S" -Wait
-        Start-Sleep -Seconds 5
+        # Run silent install — NSIS /S flag for silent mode.
+        # The installer may spawn child processes and exit early, so we
+        # also wait for Obsidian.exe to appear on disk.
+        $installer = "$env:RUNNER_TEMP\obsidian-installer\Obsidian-Setup.exe"
+        Write-Host "Running installer: $installer"
+        Start-Process -FilePath $installer -ArgumentList "/S" -Wait
+        Write-Host "Installer process exited, waiting for files..."
 
-        # Find the installed binary
+        # Wait up to 30s for the install to finish (some NSIS installers
+        # spawn child processes and the parent returns early)
+        $obsidianDir = $null
+        $obsidianExe = $null
         $searchPaths = @(
           "$env:LOCALAPPDATA\Obsidian",
           "$env:LOCALAPPDATA\Programs\Obsidian",
@@ -168,18 +178,24 @@ runs:
           "$env:ProgramFiles\Obsidian",
           "${env:ProgramFiles(x86)}\Obsidian"
         )
-        $obsidianExe = $null
-        foreach ($dir in $searchPaths) {
-          $candidate = Join-Path $dir "Obsidian.exe"
-          if (Test-Path $candidate) {
-            $obsidianExe = $candidate
-            $obsidianDir = $dir
-            break
+        for ($attempt = 0; $attempt -lt 6; $attempt++) {
+          foreach ($dir in $searchPaths) {
+            $candidate = Join-Path $dir "Obsidian.exe"
+            if (Test-Path $candidate) {
+              $obsidianExe = $candidate
+              $obsidianDir = $dir
+              break
+            }
           }
+          if ($obsidianExe) { break }
+          Write-Host "Attempt $($attempt + 1)/6: Obsidian.exe not found yet, waiting 5s..."
+          Start-Sleep -Seconds 5
         }
         if (-not $obsidianExe) {
-          Write-Host "Searching for Obsidian.exe..."
-          Get-ChildItem -Path C:\ -Filter "Obsidian.exe" -Recurse -ErrorAction SilentlyContinue -Depth 5 | Select-Object FullName
+          Write-Host "=== Searching entire C: drive for Obsidian.exe ==="
+          Get-ChildItem -Path C:\ -Filter "Obsidian.exe" -Recurse -ErrorAction SilentlyContinue -Depth 6 | Select-Object FullName
+          Write-Host "=== LOCALAPPDATA contents ==="
+          Get-ChildItem $env:LOCALAPPDATA -Depth 1 -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*bsidian*" } | Select-Object FullName
           Write-Error "Obsidian.exe not found after installation"
           exit 1
         }
