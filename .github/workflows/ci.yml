@@ -199,11 +199,38 @@ jobs:
           Start-Process -FilePath "$env:TEMP\Obsidian-Setup.exe" -ArgumentList "/S" -Wait
           Start-Sleep -Seconds 5
 
-          # Find the installed binary
-          $obsidianDir = "$env:LOCALAPPDATA\Obsidian"
-          if (-not (Test-Path "$obsidianDir\Obsidian.exe")) {
-            Write-Error "Obsidian.exe not found at $obsidianDir"
-            Get-ChildItem $obsidianDir -Recurse -ErrorAction SilentlyContinue | Select-Object FullName
+          # Find the installed binary — check common locations
+          $searchPaths = @(
+            "$env:LOCALAPPDATA\Obsidian",
+            "$env:LOCALAPPDATA\Programs\Obsidian",
+            "$env:LOCALAPPDATA\obsidian",
+            "$env:ProgramFiles\Obsidian",
+            "${env:ProgramFiles(x86)}\Obsidian",
+            "$env:USERPROFILE\AppData\Local\Obsidian"
+          )
+          $obsidianExe = $null
+          foreach ($dir in $searchPaths) {
+            $candidate = Join-Path $dir "Obsidian.exe"
+            if (Test-Path $candidate) {
+              $obsidianExe = $candidate
+              $obsidianDir = $dir
+              break
+            }
+          }
+          # Broader search if not found in known locations
+          if (-not $obsidianExe) {
+            Write-Host "Not found in known paths, searching..."
+            Write-Host "=== LOCALAPPDATA contents ==="
+            Get-ChildItem $env:LOCALAPPDATA -Depth 2 -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*obsidian*" -or $_.Name -like "*Obsidian*" } | Select-Object FullName
+            Write-Host "=== Program Files contents ==="
+            Get-ChildItem $env:ProgramFiles -Depth 2 -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*obsidian*" -or $_.Name -like "*Obsidian*" } | Select-Object FullName
+            Write-Host "=== Full drive search for Obsidian.exe ==="
+            Get-ChildItem -Path C:\ -Filter "Obsidian.exe" -Recurse -ErrorAction SilentlyContinue -Depth 5 | Select-Object FullName
+            Write-Host "=== Desktop shortcuts ==="
+            Get-ChildItem "$env:USERPROFILE\Desktop" -ErrorAction SilentlyContinue | Select-Object FullName
+            Write-Host "=== Start menu ==="
+            Get-ChildItem "$env:APPDATA\Microsoft\Windows\Start Menu" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*obsidian*" -or $_.Name -like "*Obsidian*" } | Select-Object FullName
+            Write-Error "Obsidian.exe not found after installation"
             exit 1
           }
           Write-Host "Obsidian installed at $obsidianDir"
@@ -229,7 +256,7 @@ jobs:
 
           # Launch Obsidian in the background so CLI commands have an instance
           # to talk to via IPC
-          Start-Process -FilePath "$obsidianDir\Obsidian.exe"
+          Start-Process -FilePath $obsidianExe
           Start-Sleep -Seconds 10
 
           # Verify Obsidian is running
@@ -242,7 +269,7 @@ jobs:
 
           # Create a wrapper batch file so `obsidian` resolves on PATH.
           # Place it in a directory already on PATH (C:\Windows).
-          $wrapper = "@echo off`r`n`"$obsidianDir\Obsidian.exe`" %* 2>nul"
+          $wrapper = "@echo off`r`n`"$obsidianExe`" %* 2>nul"
           [System.IO.File]::WriteAllText("C:\Windows\obsidian.cmd", $wrapper)
           Write-Host "Wrapper created at C:\Windows\obsidian.cmd"
 
