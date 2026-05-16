@@ -15,14 +15,18 @@ export type VersionInfo = z.infer<typeof versionInfoSchema>
  * Show the Obsidian version.
  *
  * CLI command: `version`
+ *
  * @returns The Obsidian version and installer version.
- * @throws {Error} if the version string cannot be parsed.
+ * @throws {Error} If the version string cannot be parsed.
  */
 export async function version(): Promise<VersionInfo> {
 	const result = await exec('version')
 
 	const match = VERSION_REGEX.exec(result)
-	if (!match) throw new ObsidianError(`Invalid version string: ${result}`, '', result, undefined)
+	if (!match) {
+		throw new ObsidianError(`Invalid version string: ${result}`, '', result, undefined)
+	}
+
 	return versionInfoSchema.parse({ installer: match[2], version: match[1] })
 }
 

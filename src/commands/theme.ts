@@ -15,8 +15,9 @@ export type ThemeUninstallOptions = Simplify<Vault & { name: string }>
  * List installed themes (with versions).
  *
  * CLI command: `themes`
+ *
  * @returns List of installed theme names with versions.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function list(options?: Vault): Promise<string[]> {
 	const output = await exec('themes', undefined, ['versions'], options)
@@ -32,14 +33,19 @@ export async function list(options?: Vault): Promise<string[]> {
  * Show active theme or get theme info by name.
  *
  * CLI command: `theme`
+ *
  * @param options - Command options.
  * @param options.name - Theme name for details.
+ *
  * @returns Theme info text.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function info(options?: ThemeInfoOptions): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.name) parameters.name = options.name
+	if (options?.name) {
+		parameters.name = options.name
+	}
+
 	const result = await exec('theme', parameters, undefined, options)
 
 	return result
@@ -49,10 +55,12 @@ export async function info(options?: ThemeInfoOptions): Promise<string> {
  * Set the active theme.
  *
  * CLI command: `theme:set`
+ *
  * @param options - Command options.
  * @param options.name - Theme name (empty string for default theme).
+ *
  * @returns The active theme name.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function set(options: ThemeSetOptions): Promise<string> {
 	const parameters: Record<string, number | string> = { name: options.name }
@@ -65,17 +73,21 @@ export async function set(options: ThemeSetOptions): Promise<string> {
  * Install a community theme.
  *
  * CLI command: `theme:install`
+ *
  * @param options - Command options.
  * @param options.name - Theme name.
  * @param options.enable - Activate the theme after installation.
+ *
  * @returns The installed theme name.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function install(options: ThemeInstallOptions): Promise<string> {
 	const parameters: Record<string, number | string> = { name: options.name }
 
 	const flags: string[] = []
-	if (options.enable) flags.push('enable')
+	if (options.enable) {
+		flags.push('enable')
+	}
 
 	const result = await exec(
 		'theme:install',
@@ -91,10 +103,12 @@ export async function install(options: ThemeInstallOptions): Promise<string> {
  * Uninstall a theme.
  *
  * CLI command: `theme:uninstall`
+ *
  * @param options - Command options.
  * @param options.name - Theme name.
+ *
  * @returns The uninstalled theme name.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function uninstall(options: ThemeUninstallOptions): Promise<string> {
 	const parameters: Record<string, number | string> = { name: options.name }

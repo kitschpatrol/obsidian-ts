@@ -178,7 +178,9 @@ export async function exec(
 	const args: string[] = []
 
 	const vault = options?.vault ?? globalVault
-	if (vault) args.push(`vault=${vault}`)
+	if (vault) {
+		args.push(`vault=${vault}`)
+	}
 
 	args.push(command)
 

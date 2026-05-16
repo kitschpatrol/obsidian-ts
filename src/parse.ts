@@ -3,15 +3,17 @@ import type { ZodType } from 'zod'
 /**
  * Parse key-value output into a typed record.
  *
- * Handles output in the format `key\tvalue\n` (tab-separated) or
- * `key: value\n` (colon-space separated) as returned by commands
- * like `file`, `vault`, and `wordcount`.
+ * Handles output in the format `key\tvalue\n` (tab-separated) or `key: value\n`
+ * (colon-space separated) as returned by commands like `file`, `vault`, and
+ * `wordcount`.
  */
 export function parseKeyValue(output: string): Record<string, string> {
 	const result: Record<string, string> = {}
 	for (const line of output.split('\n')) {
 		const trimmed = line.trim()
-		if (!trimmed) continue
+		if (!trimmed) {
+			continue
+		}
 
 		const tabIndex = trimmed.indexOf('\t')
 		if (tabIndex !== -1) {
@@ -34,7 +36,10 @@ export function parseKeyValue(output: string): Record<string, string> {
  * Used by list commands like `files`, `folders`, `tags`, etc.
  */
 export function parseLines(output: string): string[] {
-	if (!output) return []
+	if (!output) {
+		return []
+	}
+
 	return output
 		.split('\n')
 		.map((line) => line.trim())
@@ -62,8 +67,8 @@ export function parseJsonWith<T>(output: string, schema: ZodType<T>): T {
 /**
  * Remove the prefix up to and including the first colon, then trim.
  *
- * Used by action commands that return confirmation strings like
- * `Opened: welcome.md` or `Enabled: daily-notes`.
+ * Used by action commands that return confirmation strings like `Opened:
+ * welcome.md` or `Enabled: daily-notes`.
  */
 export function stripPrefix(output: string): string {
 	const colonIndex = output.indexOf(':')
@@ -84,5 +89,6 @@ export function parseNumber(output: string): number {
 	if (Number.isNaN(n)) {
 		throw new TypeError(`Expected a number but got: ${output.trim()}`)
 	}
+
 	return n
 }

@@ -32,6 +32,7 @@ export type BaseQueryResult = z.infer<typeof baseQueryResultSchema>
  * List all base files in the vault.
  *
  * CLI command: `bases`
+ *
  * @returns List of base file names.
  */
 export async function list(options?: Vault): Promise<string[]> {
@@ -48,13 +49,20 @@ export async function list(options?: Vault): Promise<string[]> {
  * List views in a base file.
  *
  * CLI command: `base:views`
+ *
  * @returns List of view names in the base file.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function views(options?: VaultFile): Promise<string[]> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) parameters.file = options.file
-	if (options?.path) parameters.path = options.path
+	if (options?.file) {
+		parameters.file = options.file
+	}
+
+	if (options?.path) {
+		parameters.path = options.path
+	}
+
 	const output = await exec('base:views', parameters, undefined, options)
 
 	return parseLines(output)
@@ -64,6 +72,7 @@ export async function views(options?: VaultFile): Promise<string[]> {
  * Create a new item in a base.
  *
  * CLI command: `base:create`
+ *
  * @param options - Command options.
  * @param options.file - Base file name.
  * @param options.path - Base file path.
@@ -72,20 +81,41 @@ export async function views(options?: VaultFile): Promise<string[]> {
  * @param options.content - Initial content.
  * @param options.open - Open file after creating.
  * @param options.newTab - Open in new tab.
+ *
  * @returns Path to created file.
- * @throws {ObsidianError} if the CLI returns an error or the response cannot be parsed.
+ * @throws {ObsidianError} If the CLI returns an error or the response cannot be
+ *   parsed.
  */
 export async function create(options?: BaseCreateOptions): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) parameters.file = options.file
-	if (options?.path) parameters.path = options.path
-	if (options?.view) parameters.view = options.view
-	if (options?.name) parameters.name = options.name
-	if (options?.content !== undefined) parameters.content = options.content
+	if (options?.file) {
+		parameters.file = options.file
+	}
+
+	if (options?.path) {
+		parameters.path = options.path
+	}
+
+	if (options?.view) {
+		parameters.view = options.view
+	}
+
+	if (options?.name) {
+		parameters.name = options.name
+	}
+
+	if (options?.content !== undefined) {
+		parameters.content = options.content
+	}
 
 	const flags: string[] = []
-	if (options?.open) flags.push('open')
-	if (options?.newTab) flags.push('newtab')
+	if (options?.open) {
+		flags.push('open')
+	}
+
+	if (options?.newTab) {
+		flags.push('newtab')
+	}
 
 	const result = await exec(
 		'base:create',
@@ -101,18 +131,30 @@ export async function create(options?: BaseCreateOptions): Promise<string> {
  * Query a base and return results.
  *
  * CLI command: `base:query`
+ *
  * @param options - Command options.
  * @param options.file - Base file name.
  * @param options.path - Base file path.
  * @param options.view - View name to query.
+ *
  * @returns Array of objects with file name and path.
- * @throws {ObsidianError} if the CLI returns an error or the response is not valid JSON.
+ * @throws {ObsidianError} If the CLI returns an error or the response is not
+ *   valid JSON.
  */
 export async function query(options?: BaseQueryOptions): Promise<BaseQueryResult[]> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) parameters.file = options.file
-	if (options?.path) parameters.path = options.path
-	if (options?.view) parameters.view = options.view
+	if (options?.file) {
+		parameters.file = options.file
+	}
+
+	if (options?.path) {
+		parameters.path = options.path
+	}
+
+	if (options?.view) {
+		parameters.view = options.view
+	}
+
 	parameters.format = 'json'
 	const result = await exec('base:query', parameters, undefined, options)
 

@@ -29,14 +29,20 @@ export type VaultOpenOptions = Simplify<Vault & { name: string }>
  * Show vault info (name, path, file/folder count, size).
  *
  * CLI command: `vault`
+ *
  * @param options - Command options.
- * @param options.info - Return specific info only: `name`, `path`, `files`, `folders`, or `size`.
+ * @param options.info - Return specific info only: `name`, `path`, `files`,
+ *   `folders`, or `size`.
+ *
  * @returns Vault metadata as key-value pairs.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function info(options?: VaultInfoOptions): Promise<VaultInfo> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.info) parameters.info = options.info
+	if (options?.info) {
+		parameters.info = options.info
+	}
+
 	const output = await exec('vault', parameters, undefined, options)
 
 	return parseKeyValueWith(output, vaultInfoSchema)
@@ -46,8 +52,9 @@ export async function info(options?: VaultInfoOptions): Promise<VaultInfo> {
  * List known vaults.
  *
  * CLI command: `vaults`
+ *
  * @returns List of vault names.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function list(): Promise<string[]> {
 	const output = await exec('vaults')
@@ -59,8 +66,9 @@ export async function list(): Promise<string[]> {
  * List known vaults with verbose details (names and paths).
  *
  * CLI command: `vaults verbose`
+ *
  * @returns Array of vault objects with name and path.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function listVerbose(): Promise<VaultListItem[]> {
 	const output = await exec('vaults', undefined, ['verbose'])
@@ -80,8 +88,9 @@ export async function listVerbose(): Promise<VaultListItem[]> {
  * Return the total number of known vaults.
  *
  * CLI command: `vaults total`
+ *
  * @returns Total number of vaults.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function total(): Promise<number> {
 	const output = await exec('vaults', undefined, ['total'])
@@ -93,10 +102,12 @@ export async function total(): Promise<number> {
  * Open a vault by name.
  *
  * CLI command: `vault:open`
+ *
  * @param options - Command options.
  * @param options.name - Vault name to open.
+ *
  * @returns The opened vault name.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function open(options: VaultOpenOptions): Promise<string> {
 	const parameters: Record<string, number | string> = { name: options.name }

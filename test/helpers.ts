@@ -29,13 +29,15 @@ export function backupVault(): void {
  * Restore the fixture vault from the temp backup after write tests. Call this
  * in an `afterAll` for test files that modify vault contents.
  *
- * After restoring files, reloads the vault so Obsidian re-indexes the
- * restored contents. On Linux, inotify watchers on subdirectories
- * (e.g. `.obsidian/snippets/`) are lost when `clearDirectory` removes
- * and recreates them — without reload, Obsidian never re-scans.
+ * After restoring files, reloads the vault so Obsidian re-indexes the restored
+ * contents. On Linux, inotify watchers on subdirectories (e.g.
+ * `.obsidian/snippets/`) are lost when `clearDirectory` removes and recreates
+ * them — without reload, Obsidian never re-scans.
  */
 export async function restoreVault(): Promise<void> {
-	if (!backupDirectory) return
+	if (!backupDirectory) {
+		return
+	}
 
 	clearDirectory(VAULT_DIR)
 	cpSync(backupDirectory, VAULT_DIR, { recursive: true })

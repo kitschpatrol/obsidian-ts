@@ -42,21 +42,30 @@ export type SearchOpenOptions = Simplify<Vault & { query?: string }>
  * Search the vault for text.
  *
  * CLI command: `search`
+ *
  * @param options - Command options.
  * @param options.query - Search query (supports tag and property syntax).
  * @param options.path - Limit search to a folder.
  * @param options.limit - Maximum number of results.
  * @param options.case - Case-sensitive search.
+ *
  * @returns List of matching file paths.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function query(options: SearchQueryOptions): Promise<string[]> {
 	const parameters: Record<string, number | string> = { query: options.query }
-	if (options.path) parameters.path = options.path
-	if (options.limit !== undefined) parameters.limit = options.limit
+	if (options.path) {
+		parameters.path = options.path
+	}
+
+	if (options.limit !== undefined) {
+		parameters.limit = options.limit
+	}
 
 	const flags: string[] = []
-	if (options.case) flags.push('case')
+	if (options.case) {
+		flags.push('case')
+	}
 
 	parameters.format = 'json'
 	const output = await exec('search', parameters, flags.length > 0 ? flags : undefined, options)
@@ -72,19 +81,25 @@ export async function query(options: SearchQueryOptions): Promise<string[]> {
  * Return the total number of search matches.
  *
  * CLI command: `search total`
+ *
  * @param options - Command options.
  * @param options.query - Search query.
  * @param options.path - Limit search to a folder.
  * @param options.case - Case-sensitive search.
+ *
  * @returns Total number of search matches.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function total(options: SearchTotalOptions): Promise<number> {
 	const parameters: Record<string, number | string> = { query: options.query }
-	if (options.path) parameters.path = options.path
+	if (options.path) {
+		parameters.path = options.path
+	}
 
 	const flags: string[] = ['total']
-	if (options.case) flags.push('case')
+	if (options.case) {
+		flags.push('case')
+	}
 
 	const output = await exec('search', parameters, flags, options)
 
@@ -95,21 +110,30 @@ export async function total(options: SearchTotalOptions): Promise<number> {
  * Search with matching line context.
  *
  * CLI command: `search:context`
+ *
  * @param options - Command options.
  * @param options.query - Search query.
  * @param options.path - Limit search to a folder.
  * @param options.limit - Maximum number of results.
  * @param options.case - Case-sensitive search.
+ *
  * @returns Array of results with file paths and matching lines.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function context(options: SearchContextOptions): Promise<SearchContextResult[]> {
 	const parameters: Record<string, number | string> = { format: 'json', query: options.query }
-	if (options.path) parameters.path = options.path
-	if (options.limit !== undefined) parameters.limit = options.limit
+	if (options.path) {
+		parameters.path = options.path
+	}
+
+	if (options.limit !== undefined) {
+		parameters.limit = options.limit
+	}
 
 	const flags: string[] = []
-	if (options.case) flags.push('case')
+	if (options.case) {
+		flags.push('case')
+	}
 
 	const result = await exec(
 		'search:context',
@@ -129,14 +153,19 @@ export async function context(options: SearchContextOptions): Promise<SearchCont
  * Open the search view in Obsidian with an optional initial query.
  *
  * CLI command: `search:open`
+ *
  * @param options - Command options.
  * @param options.query - Initial search query.
+ *
  * @returns The search query that was opened.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function open(options?: SearchOpenOptions): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.query) parameters.query = options.query
+	if (options?.query) {
+		parameters.query = options.query
+	}
+
 	const result = await exec('search:open', parameters, undefined, options)
 
 	return stripPrefix(result)

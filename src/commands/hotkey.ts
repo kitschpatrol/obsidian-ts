@@ -17,8 +17,9 @@ export type HotkeyGetOptions = Simplify<Vault & { id: string }>
  * List hotkeys (includes all commands, with custom/default info).
  *
  * CLI command: `hotkeys`
+ *
  * @returns Array of hotkey objects with command and hotkey bindings.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function list(options?: Vault): Promise<HotkeyInfo[]> {
 	const parameters: Record<string, number | string> = { format: 'json' }
@@ -35,8 +36,9 @@ export async function list(options?: Vault): Promise<HotkeyInfo[]> {
  * Return the total number of hotkeys.
  *
  * CLI command: `hotkeys total`
+ *
  * @returns Total number of hotkeys.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function total(options?: Vault): Promise<number> {
 	const output = await exec('hotkeys', undefined, ['total'], options)
@@ -48,10 +50,12 @@ export async function total(options?: Vault): Promise<number> {
  * Get the hotkey assigned to a command.
  *
  * CLI command: `hotkey`
+ *
  * @param options - Command options.
  * @param options.id - Command ID.
+ *
  * @returns The hotkey binding for the command.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function get(options: HotkeyGetOptions): Promise<string> {
 	const parameters: Record<string, number | string> = { id: options.id }

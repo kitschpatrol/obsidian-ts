@@ -11,8 +11,9 @@ export type SnippetDisableOptions = Simplify<Vault & { name: string }>
  * List installed CSS snippets.
  *
  * CLI command: `snippets`
+ *
  * @returns List of installed snippet names.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function list(options?: Vault): Promise<string[]> {
 	const output = await exec('snippets', undefined, undefined, options)
@@ -28,8 +29,9 @@ export async function list(options?: Vault): Promise<string[]> {
  * List enabled CSS snippets.
  *
  * CLI command: `snippets:enabled`
+ *
  * @returns List of enabled snippet names.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function enabled(options?: Vault): Promise<string[]> {
 	const output = await exec('snippets:enabled', undefined, undefined, options)
@@ -45,10 +47,12 @@ export async function enabled(options?: Vault): Promise<string[]> {
  * Enable a CSS snippet.
  *
  * CLI command: `snippet:enable`
+ *
  * @param options - Command options.
  * @param options.name - Snippet name.
+ *
  * @returns The enabled snippet name.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function enable(options: SnippetEnableOptions): Promise<string> {
 	const parameters: Record<string, number | string> = { name: options.name }
@@ -61,10 +65,12 @@ export async function enable(options: SnippetEnableOptions): Promise<string> {
  * Disable a CSS snippet.
  *
  * CLI command: `snippet:disable`
+ *
  * @param options - Command options.
  * @param options.name - Snippet name.
+ *
  * @returns The disabled snippet name.
- * @throws {ObsidianError} if the CLI returns an error.
+ * @throws {ObsidianError} If the CLI returns an error.
  */
 export async function disable(options: SnippetDisableOptions): Promise<string> {
 	const parameters: Record<string, number | string> = { name: options.name }
