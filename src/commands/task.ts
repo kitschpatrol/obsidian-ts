@@ -61,15 +61,15 @@ export type TaskUpdateOptions = Simplify<
  */
 export async function list(options?: TaskListOptions): Promise<TaskInfo[]> {
 	const parameters: Record<string, number | string> = { format: 'json' }
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
-	if (options?.status) {
+	if (options?.status !== undefined && options.status !== '') {
 		parameters.status = options.status
 	}
 
@@ -92,11 +92,7 @@ export async function list(options?: TaskListOptions): Promise<TaskInfo[]> {
 
 	const output = await exec('tasks', parameters, flags, options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseJsonWith(output, z.array(taskInfoSchema))
+	return output.startsWith('No ') ? [] : parseJsonWith(output, z.array(taskInfoSchema))
 }
 
 /**
@@ -129,15 +125,15 @@ export async function total(options?: Vault): Promise<number> {
  */
 export async function show(options: TaskShowOptions): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options.ref) {
+	if (options.ref !== undefined && options.ref !== '') {
 		parameters.ref = options.ref
 	}
 
-	if (options.file) {
+	if (options.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options.path) {
+	if (options.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -171,15 +167,15 @@ export async function show(options: TaskShowOptions): Promise<string> {
  */
 export async function update(options: TaskUpdateOptions): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options.ref) {
+	if (options.ref !== undefined && options.ref !== '') {
 		parameters.ref = options.ref
 	}
 
-	if (options.file) {
+	if (options.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options.path) {
+	if (options.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -187,7 +183,7 @@ export async function update(options: TaskUpdateOptions): Promise<string> {
 		parameters.line = options.line
 	}
 
-	if (options.status) {
+	if (options.status !== undefined && options.status !== '') {
 		parameters.status = options.status
 	}
 

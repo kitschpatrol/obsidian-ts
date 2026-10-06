@@ -54,11 +54,11 @@ export async function status(options?: Vault): Promise<string> {
  */
 export async function history(options?: VaultFile): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -81,11 +81,11 @@ export async function history(options?: VaultFile): Promise<string> {
  */
 export async function historyTotal(options?: VaultFile): Promise<number> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -109,11 +109,11 @@ export async function historyTotal(options?: VaultFile): Promise<number> {
  */
 export async function read(options: SyncReadOptions): Promise<string> {
 	const parameters: Record<string, number | string> = { version: options.version }
-	if (options.file) {
+	if (options.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options.path) {
+	if (options.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -140,11 +140,11 @@ export async function read(options: SyncReadOptions): Promise<string> {
  */
 export async function restore(options: SyncRestoreOptions): Promise<string> {
 	const parameters: Record<string, number | string> = { version: options.version }
-	if (options.file) {
+	if (options.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options.path) {
+	if (options.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -167,11 +167,11 @@ export async function restore(options: SyncRestoreOptions): Promise<string> {
  */
 export async function open(options?: VaultFile): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -191,11 +191,7 @@ export async function open(options?: VaultFile): Promise<string> {
 export async function deleted(options?: Vault): Promise<string[]> {
 	const output = await exec('sync:deleted', undefined, undefined, options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseLines(output)
+	return output.startsWith('No ') ? [] : parseLines(output)
 }
 
 /**

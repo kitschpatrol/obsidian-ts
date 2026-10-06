@@ -24,21 +24,17 @@ export type OutlineHeading = z.infer<typeof outlineHeadingSchema>
  */
 export async function show(options?: VaultFile): Promise<OutlineHeading[]> {
 	const parameters: Record<string, number | string> = { format: 'json' }
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
 	const output = await exec('outline', parameters, undefined, options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseJsonWith(output, z.array(outlineHeadingSchema))
+	return output.startsWith('No ') ? [] : parseJsonWith(output, z.array(outlineHeadingSchema))
 }
 
 /**
@@ -55,11 +51,11 @@ export async function show(options?: VaultFile): Promise<OutlineHeading[]> {
  */
 export async function total(options?: VaultFile): Promise<number> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 

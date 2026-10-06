@@ -3,7 +3,7 @@ import * as general from '../src/commands/general'
 import { setupVault } from './helpers'
 
 /** Matches semver-like version strings */
-const SEMVER_PREFIX_REGEX = /^\d+\.\d+\.\d+/
+const SEMVER_PREFIX_REGEX = /^\d+\.\d+\.\d+/v
 
 beforeAll(() => {
 	setupVault()

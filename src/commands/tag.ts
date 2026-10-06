@@ -36,15 +36,15 @@ export type TagInfoOptions = Simplify<Vault & { name: string; total?: boolean }>
  */
 export async function list(options?: TagListOptions): Promise<TagInfo[]> {
 	const parameters: Record<string, number | string> = { format: 'json' }
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
-	if (options?.sort) {
+	if (options?.sort !== undefined) {
 		parameters.sort = options.sort
 	}
 
@@ -55,11 +55,7 @@ export async function list(options?: TagListOptions): Promise<TagInfo[]> {
 
 	const output = await exec('tags', parameters, flags, options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseJsonWith(output, z.array(tagInfoSchema))
+	return output.startsWith('No ') ? [] : parseJsonWith(output, z.array(tagInfoSchema))
 }
 
 /**

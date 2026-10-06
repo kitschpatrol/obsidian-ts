@@ -33,7 +33,7 @@ export type FolderListOptions = Simplify<Vault & { folder?: string }>
  */
 export async function info(options: FolderInfoOptions): Promise<FolderInfo> {
 	const parameters: Record<string, number | string> = { path: options.path }
-	if (options.info) {
+	if (options.info !== undefined) {
 		parameters.info = options.info
 	}
 
@@ -55,17 +55,13 @@ export async function info(options: FolderInfoOptions): Promise<FolderInfo> {
  */
 export async function list(options?: FolderListOptions): Promise<string[]> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.folder) {
+	if (options?.folder !== undefined && options.folder !== '') {
 		parameters.folder = options.folder
 	}
 
 	const output = await exec('folders', parameters, undefined, options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseLines(output)
+	return output.startsWith('No ') ? [] : parseLines(output)
 }
 
 /**

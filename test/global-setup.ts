@@ -20,9 +20,11 @@ export function setup(): void {
  * Restore the vault fixture from backup after all tests complete.
  */
 export function teardown(): void {
-	if (existsSync(backupDirectory)) {
-		clearDirectory(vaultDirectory)
-		cpSync(backupDirectory, vaultDirectory, { recursive: true })
-		rmSync(backupDirectory, { recursive: true })
+	if (!existsSync(backupDirectory)) {
+		return
 	}
+
+	clearDirectory(vaultDirectory)
+	cpSync(backupDirectory, vaultDirectory, { recursive: true })
+	rmSync(backupDirectory, { recursive: true })
 }

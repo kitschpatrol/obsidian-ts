@@ -25,15 +25,15 @@ export type UniqueCreateOptions = Simplify<
  */
 export async function create(options?: UniqueCreateOptions): Promise<void> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.name) {
+	if (options?.name !== undefined && options.name !== '') {
 		parameters.name = options.name
 	}
 
-	if (options?.content) {
+	if (options?.content !== undefined && options.content !== '') {
 		parameters.content = options.content
 	}
 
-	if (options?.paneType) {
+	if (options?.paneType !== undefined) {
 		parameters.paneType = options.paneType
 	}
 

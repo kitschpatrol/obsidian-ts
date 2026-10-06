@@ -11,7 +11,7 @@ export function parseKeyValue(output: string): Record<string, string> {
 	const result: Record<string, string> = {}
 	for (const line of output.split('\n')) {
 		const trimmed = line.trim()
-		if (!trimmed) {
+		if (trimmed === '') {
 			continue
 		}
 
@@ -36,14 +36,12 @@ export function parseKeyValue(output: string): Record<string, string> {
  * Used by list commands like `files`, `folders`, `tags`, etc.
  */
 export function parseLines(output: string): string[] {
-	if (!output) {
-		return []
-	}
-
-	return output
-		.split('\n')
-		.map((line) => line.trim())
-		.filter(Boolean)
+	return output === ''
+		? []
+		: output
+				.split('\n')
+				.map((line) => line.trim())
+				.filter(Boolean)
 }
 
 /**
@@ -72,11 +70,7 @@ export function parseJsonWith<T>(output: string, schema: ZodType<T>): T {
  */
 export function stripPrefix(output: string): string {
 	const colonIndex = output.indexOf(':')
-	if (colonIndex !== -1) {
-		return output.slice(colonIndex + 1).trim()
-	}
-
-	return output.trim()
+	return colonIndex === -1 ? output.trim() : output.slice(colonIndex + 1).trim()
 }
 
 /**
@@ -85,6 +79,7 @@ export function stripPrefix(output: string): string {
  * Used by `total` flag results that return a count.
  */
 export function parseNumber(output: string): number {
+	// eslint-disable-next-line unicorn/prefer-number-coercion -- Number() would turn empty output into 0 instead of throwing
 	const n = Number.parseInt(output.trim(), 10)
 	if (Number.isNaN(n)) {
 		throw new TypeError(`Expected a number but got: ${output.trim()}`)

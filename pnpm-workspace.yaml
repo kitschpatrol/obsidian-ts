@@ -12,3 +12,7 @@ publicHoistPattern:
 allowBuilds:
   esbuild: true
   unrs-resolver: true
+peerDependencyRules:
+  allowedVersions:
+    # No ESLint 10 release yet (jsx-eslint/eslint-plugin-jsx-a11y#1075); its rules never run here (no JSX)
+    'eslint-plugin-jsx-a11y>eslint': '10'

@@ -29,21 +29,17 @@ export type UnresolvedLinkInfo = z.infer<typeof unresolvedLinkInfoSchema>
  */
 export async function backlinks(options?: VaultFile): Promise<BacklinkInfo[]> {
 	const parameters: Record<string, number | string> = { format: 'json' }
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
 	const output = await exec('backlinks', parameters, ['counts'], options)
 
-	if (output.startsWith('No backlinks')) {
-		return []
-	}
-
-	return parseJsonWith(output, z.array(backlinkInfoSchema))
+	return output.startsWith('No backlinks') ? [] : parseJsonWith(output, z.array(backlinkInfoSchema))
 }
 
 /**
@@ -60,21 +56,17 @@ export async function backlinks(options?: VaultFile): Promise<BacklinkInfo[]> {
  */
 export async function backlinkTotal(options?: VaultFile): Promise<number> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
 	const output = await exec('backlinks', parameters, ['total'], options)
 
-	if (output.startsWith('No backlinks')) {
-		return 0
-	}
-
-	return parseNumber(output)
+	return output.startsWith('No backlinks') ? 0 : parseNumber(output)
 }
 
 /**
@@ -91,21 +83,17 @@ export async function backlinkTotal(options?: VaultFile): Promise<number> {
  */
 export async function outgoing(options?: VaultFile): Promise<string[]> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
 	const output = await exec('links', parameters, undefined, options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseLines(output)
+	return output.startsWith('No ') ? [] : parseLines(output)
 }
 
 /**
@@ -122,21 +110,17 @@ export async function outgoing(options?: VaultFile): Promise<string[]> {
  */
 export async function outgoingTotal(options?: VaultFile): Promise<number> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
 	const output = await exec('links', parameters, ['total'], options)
 
-	if (output.startsWith('No ')) {
-		return 0
-	}
-
-	return parseNumber(output)
+	return output.startsWith('No ') ? 0 : parseNumber(output)
 }
 
 /**
@@ -154,11 +138,9 @@ export async function unresolved(options?: Vault): Promise<UnresolvedLinkInfo[]>
 
 	const output = await exec('unresolved', parameters, ['verbose', 'counts'], options)
 
-	if (output.startsWith('No unresolved')) {
-		return []
-	}
-
-	return parseJsonWith(output, z.array(unresolvedLinkInfoSchema))
+	return output.startsWith('No unresolved')
+		? []
+		: parseJsonWith(output, z.array(unresolvedLinkInfoSchema))
 }
 
 /**
@@ -172,11 +154,7 @@ export async function unresolved(options?: Vault): Promise<UnresolvedLinkInfo[]>
 export async function unresolvedTotal(options?: Vault): Promise<number> {
 	const output = await exec('unresolved', undefined, ['total'], options)
 
-	if (output.startsWith('No unresolved')) {
-		return 0
-	}
-
-	return parseNumber(output)
+	return output.startsWith('No unresolved') ? 0 : parseNumber(output)
 }
 
 /**
@@ -192,11 +170,7 @@ export async function unresolvedTotal(options?: Vault): Promise<number> {
 export async function orphans(options?: Vault): Promise<string[]> {
 	const output = await exec('orphans', undefined, ['all'], options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseLines(output)
+	return output.startsWith('No ') ? [] : parseLines(output)
 }
 
 /**
@@ -210,11 +184,7 @@ export async function orphans(options?: Vault): Promise<string[]> {
 export async function orphanTotal(options?: Vault): Promise<number> {
 	const output = await exec('orphans', undefined, ['total'], options)
 
-	if (output.startsWith('No ')) {
-		return 0
-	}
-
-	return parseNumber(output)
+	return output.startsWith('No ') ? 0 : parseNumber(output)
 }
 
 /**
@@ -230,11 +200,7 @@ export async function orphanTotal(options?: Vault): Promise<number> {
 export async function deadEnds(options?: Vault): Promise<string[]> {
 	const output = await exec('deadends', undefined, ['all'], options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseLines(output)
+	return output.startsWith('No ') ? [] : parseLines(output)
 }
 
 /**
@@ -248,9 +214,5 @@ export async function deadEnds(options?: Vault): Promise<string[]> {
 export async function deadEndTotal(options?: Vault): Promise<number> {
 	const output = await exec('deadends', undefined, ['total'], options)
 
-	if (output.startsWith('No ')) {
-		return 0
-	}
-
-	return parseNumber(output)
+	return output.startsWith('No ') ? 0 : parseNumber(output)
 }

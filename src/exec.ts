@@ -2,7 +2,7 @@ import { coerce, satisfies } from 'semver'
 import { NonZeroExitError, x } from 'tinyexec'
 import { log } from './log'
 
-const OBSIDIAN_CLI_DOCS_URL = 'https://help.obsidian.md/cli'
+const OBSIDIAN_CLI_DOCS_URL = 'https://obsidian.md/help/cli'
 const OBSIDIAN_CLI_VERSION = '^1.12.7'
 
 /**
@@ -22,7 +22,10 @@ export class ObsidianError extends Error {
 		exitCode: number | undefined,
 		options?: { cause?: unknown },
 	) {
-		super(message || stderr || stdout || 'Obsidian CLI command failed', options)
+		super(
+			[message, stderr, stdout].find((text) => text !== '') ?? 'Obsidian CLI command failed',
+			options,
+		)
 		this.name = 'ObsidianError'
 		this.stderr = stderr
 		this.stdout = stdout
@@ -80,6 +83,7 @@ let resolvedCliVersion: string | undefined
 export async function isCompatible(): Promise<boolean> {
 	// eslint-disable-next-line ts/prefer-nullish-coalescing
 	if (compatibilityPromise === undefined) {
+		// eslint-disable-next-line unicorn/prefer-await -- Memoizes the in-flight promise, which awaiting would not
 		compatibilityPromise = checkCompatibility().catch((error: unknown) => {
 			// Clear the cached promise so transient failures can be retried
 			compatibilityPromise = undefined
@@ -127,15 +131,17 @@ export function configure(options: { binary?: string; vault?: null | string }): 
 		globalVault = options.vault
 	}
 
-	if (options.binary !== undefined && options.binary !== globalBinary) {
-		if (!options.binary) {
-			throw new Error('binary must be a non-empty string')
-		}
-
-		globalBinary = options.binary
-		compatibilityPromise = undefined
-		resolvedCliVersion = undefined
+	if (options.binary === undefined || options.binary === globalBinary) {
+		return
 	}
+
+	if (options.binary === '') {
+		throw new Error('binary must be a non-empty string')
+	}
+
+	globalBinary = options.binary
+	compatibilityPromise = undefined
+	resolvedCliVersion = undefined
 }
 
 /**
@@ -178,7 +184,7 @@ export async function exec(
 	const args: string[] = []
 
 	const vault = options?.vault ?? globalVault
-	if (vault) {
+	if (vault !== undefined && vault !== '') {
 		args.push(`vault=${vault}`)
 	}
 

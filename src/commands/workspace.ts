@@ -38,11 +38,7 @@ export async function show(options?: Vault): Promise<string> {
 export async function list(options?: Vault): Promise<string[]> {
 	const output = await exec('workspaces', undefined, undefined, options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseLines(output)
+	return output.startsWith('No ') ? [] : parseLines(output)
 }
 
 /**
@@ -72,7 +68,7 @@ export async function total(options?: Vault): Promise<number> {
  */
 export async function save(options?: WorkspaceSaveOptions): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.name) {
+	if (options?.name !== undefined && options.name !== '') {
 		parameters.name = options.name
 	}
 
@@ -130,11 +126,7 @@ async function deleteWorkspace(options: WorkspaceDeleteOptions): Promise<string>
 export async function tabs(options?: Vault): Promise<string[]> {
 	const output = await exec('tabs', undefined, ['ids'], options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseLines(output)
+	return output.startsWith('No ') ? [] : parseLines(output)
 }
 
 /**
@@ -152,15 +144,15 @@ export async function tabs(options?: Vault): Promise<string[]> {
  */
 export async function openTab(options?: WorkspaceOpenTabOptions): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.group) {
+	if (options?.group !== undefined && options.group !== '') {
 		parameters.group = options.group
 	}
 
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.view) {
+	if (options?.view !== undefined && options.view !== '') {
 		parameters.view = options.view
 	}
 
@@ -180,11 +172,7 @@ export async function openTab(options?: WorkspaceOpenTabOptions): Promise<string
 export async function recents(options?: Vault): Promise<string[]> {
 	const output = await exec('recents', undefined, undefined, options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseLines(output)
+	return output.startsWith('No ') ? [] : parseLines(output)
 }
 
 /**

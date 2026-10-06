@@ -4,7 +4,7 @@ import * as file from '../src/commands/file'
 import { backupVault, restoreVault, setupVault } from './helpers'
 
 /** Matches "YYYY-MM-DD.md" daily note paths */
-const DATE_PATH_REGEX = /^\d{4}-\d{2}-\d{2}\.md$/
+const DATE_PATH_REGEX = /^\d{4}-\d{2}-\d{2}\.md$/v
 
 let dailyPath: string | undefined
 
@@ -13,17 +13,22 @@ beforeAll(async () => {
 	backupVault()
 	// Capture the daily path early so afterAll can always clean up,
 	// even if individual tests fail.
-	// eslint-disable-next-line unicorn/no-useless-undefined
-	dailyPath = await daily.path().catch(() => undefined)
+	try {
+		dailyPath = await daily.path()
+	} catch {
+		dailyPath = undefined
+	}
 })
 
 afterAll(async () => {
 	// Clean up the daily note so Obsidian's index doesn't retain a ghost
 	// entry after the file is removed by restoreVault.
-	if (dailyPath) {
-		await file.delete({ path: dailyPath, permanent: true }).catch(() => {
+	if (dailyPath !== undefined && dailyPath !== '') {
+		try {
+			await file.delete({ path: dailyPath, permanent: true })
+		} catch {
 			// No op
-		})
+		}
 	}
 
 	await restoreVault()

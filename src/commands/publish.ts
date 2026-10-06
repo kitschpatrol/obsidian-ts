@@ -46,11 +46,7 @@ export async function site(options?: Vault): Promise<PublishSiteInfo> {
 export async function list(options?: Vault): Promise<string[]> {
 	const output = await exec('publish:list', undefined, undefined, options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseLines(output)
+	return output.startsWith('No ') ? [] : parseLines(output)
 }
 
 /**
@@ -84,11 +80,11 @@ export async function listTotal(options?: Vault): Promise<number> {
  */
 export async function status(options?: PublishStatusOptions): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -144,11 +140,11 @@ export async function statusTotal(options?: Vault): Promise<number> {
  */
 export async function add(options?: PublishAddOptions): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -181,11 +177,11 @@ export async function add(options?: PublishAddOptions): Promise<string> {
  */
 export async function remove(options?: VaultFile): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -208,11 +204,11 @@ export async function remove(options?: VaultFile): Promise<string> {
  */
 export async function open(options?: VaultFile): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 

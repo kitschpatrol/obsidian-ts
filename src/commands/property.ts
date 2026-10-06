@@ -52,19 +52,19 @@ export type PropertyAliasesOptions = Simplify<FileOrPath & Vault & { active?: bo
  */
 export async function list(options?: PropertyListOptions): Promise<PropertyInfo[]> {
 	const parameters: Record<string, number | string> = { format: 'json' }
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
-	if (options?.name) {
+	if (options?.name !== undefined && options.name !== '') {
 		parameters.name = options.name
 	}
 
-	if (options?.sort) {
+	if (options?.sort !== undefined) {
 		parameters.sort = options.sort
 	}
 
@@ -75,11 +75,7 @@ export async function list(options?: PropertyListOptions): Promise<PropertyInfo[
 
 	const output = await exec('properties', parameters, flags, options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseJsonWith(output, z.array(propertyInfoSchema))
+	return output.startsWith('No ') ? [] : parseJsonWith(output, z.array(propertyInfoSchema))
 }
 
 /**
@@ -117,15 +113,15 @@ export async function set(options: PropertySetOptions): Promise<string> {
 		name: options.name,
 		value: options.value,
 	}
-	if (options.type) {
+	if (options.type !== undefined) {
 		parameters.type = options.type
 	}
 
-	if (options.file) {
+	if (options.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options.path) {
+	if (options.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -149,11 +145,11 @@ export async function set(options: PropertySetOptions): Promise<string> {
  */
 export async function remove(options: PropertyRemoveOptions): Promise<string> {
 	const parameters: Record<string, number | string> = { name: options.name }
-	if (options.file) {
+	if (options.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options.path) {
+	if (options.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -177,11 +173,11 @@ export async function remove(options: PropertyRemoveOptions): Promise<string> {
  */
 export async function read(options: PropertyReadOptions): Promise<string> {
 	const parameters: Record<string, number | string> = { name: options.name }
-	if (options.file) {
+	if (options.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options.path) {
+	if (options.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -208,11 +204,11 @@ export async function read(options: PropertyReadOptions): Promise<string> {
  */
 export async function aliases(options?: PropertyAliasesOptions): Promise<string[]> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -223,11 +219,7 @@ export async function aliases(options?: PropertyAliasesOptions): Promise<string[
 
 	const output = await exec('aliases', parameters, flags, options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseLines(output)
+	return output.startsWith('No ') ? [] : parseLines(output)
 }
 
 /**

@@ -36,7 +36,7 @@ export type DailyPrependOptions = Simplify<
  */
 export async function open(options?: DailyOpenOptions): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.paneType) {
+	if (options?.paneType !== undefined) {
 		parameters.paneType = options.paneType
 	}
 
@@ -92,7 +92,7 @@ export async function read(options?: Vault): Promise<string> {
  */
 export async function append(options: DailyAppendOptions): Promise<string> {
 	const parameters: Record<string, number | string> = { content: options.content }
-	if (options.paneType) {
+	if (options.paneType !== undefined) {
 		parameters.paneType = options.paneType
 	}
 
@@ -131,7 +131,7 @@ export async function append(options: DailyAppendOptions): Promise<string> {
  */
 export async function prepend(options: DailyPrependOptions): Promise<string> {
 	const parameters: Record<string, number | string> = { content: options.content }
-	if (options.paneType) {
+	if (options.paneType !== undefined) {
 		parameters.paneType = options.paneType
 	}
 

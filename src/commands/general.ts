@@ -3,7 +3,7 @@ import type { Vault } from '../types'
 import { exec, ObsidianError } from '../exec'
 
 /** Matches "1.2.3 (installer 4.5.6)" version output */
-const VERSION_REGEX = /^([\d.]+)\s+\(installer\s+([\d.]+)\)$/
+const VERSION_REGEX = /^([\d.]+)\s+\(installer\s+([\d.]+)\)$/v
 
 const versionInfoSchema = z.object({
 	installer: z.string(),

@@ -20,7 +20,7 @@ export type CommandExecuteOptions = Simplify<Vault & { id: string }>
  */
 export async function list(options?: CommandListOptions): Promise<string[]> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.filter) {
+	if (options?.filter !== undefined && options.filter !== '') {
 		parameters.filter = options.filter
 	}
 

@@ -3,7 +3,7 @@ import { configure, exec, getVault, ObsidianError, ObsidianNotFoundError } from 
 import { setupVault, VAULT_NAME } from './helpers'
 
 /** Matches semver-like version strings */
-const SEMVER_PREFIX_REGEX = /^\d+\.\d+\.\d+/
+const SEMVER_PREFIX_REGEX = /^\d+\.\d+\.\d+/v
 
 beforeAll(() => {
 	setupVault()
@@ -29,12 +29,12 @@ describe('exec', () => {
 
 	it('passes flags', async () => {
 		const result = await exec('files', undefined, ['total'])
-		expect(Number.parseInt(result, 10)).toBeGreaterThan(0)
+		expect(Number(result)).toBeGreaterThan(0)
 	})
 
 	it('passes vault option', async () => {
 		const result = await exec('files', undefined, ['total'], { vault: VAULT_NAME })
-		expect(Number.parseInt(result, 10)).toBeGreaterThan(0)
+		expect(Number(result)).toBeGreaterThan(0)
 	})
 })
 

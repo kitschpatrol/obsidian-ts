@@ -21,7 +21,7 @@ export type RandomReadOptions = Simplify<Vault & { folder?: string }>
  */
 export async function open(options?: RandomOpenOptions): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.folder) {
+	if (options?.folder !== undefined && options.folder !== '') {
 		parameters.folder = options.folder
 	}
 
@@ -48,7 +48,7 @@ export async function open(options?: RandomOpenOptions): Promise<string> {
  */
 export async function read(options?: RandomReadOptions): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.folder) {
+	if (options?.folder !== undefined && options.folder !== '') {
 		parameters.folder = options.folder
 	}
 

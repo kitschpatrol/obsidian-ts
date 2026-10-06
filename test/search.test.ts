@@ -3,7 +3,7 @@ import * as search from '../src/commands/search'
 import { setupVault } from './helpers'
 
 /** Matches paths starting with "notes/" */
-const NOTES_PREFIX_REGEX = /^notes\//
+const NOTES_PREFIX_REGEX = /^notes\//v
 
 beforeAll(() => {
 	setupVault()

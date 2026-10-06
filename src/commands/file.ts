@@ -56,11 +56,11 @@ export type FileDeleteOptions = Simplify<FileOrPath & Vault & { permanent?: bool
  */
 export async function info(options?: VaultFile): Promise<FileInfo> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -83,21 +83,17 @@ export async function info(options?: VaultFile): Promise<FileInfo> {
  */
 export async function list(options?: FileListOptions): Promise<string[]> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.folder) {
+	if (options?.folder !== undefined && options.folder !== '') {
 		parameters.folder = options.folder
 	}
 
-	if (options?.ext) {
+	if (options?.ext !== undefined && options.ext !== '') {
 		parameters.ext = options.ext
 	}
 
 	const output = await exec('files', parameters, undefined, options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseLines(output)
+	return output.startsWith('No ') ? [] : parseLines(output)
 }
 
 /**
@@ -129,11 +125,11 @@ export async function total(options?: Vault): Promise<number> {
  */
 export async function open(options?: FileOpenOptions): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -164,11 +160,11 @@ export async function open(options?: FileOpenOptions): Promise<string> {
  */
 export async function create(options?: FileCreateOptions): Promise<void> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.name) {
+	if (options?.name !== undefined && options.name !== '') {
 		parameters.name = options.name
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -176,7 +172,7 @@ export async function create(options?: FileCreateOptions): Promise<void> {
 		parameters.content = options.content
 	}
 
-	if (options?.template) {
+	if (options?.template !== undefined && options.template !== '') {
 		parameters.template = options.template
 	}
 
@@ -210,11 +206,11 @@ export async function create(options?: FileCreateOptions): Promise<void> {
  */
 export async function read(options?: VaultFile): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -237,11 +233,11 @@ export async function read(options?: VaultFile): Promise<string> {
  */
 export async function append(options: FileAppendOptions): Promise<void> {
 	const parameters: Record<string, number | string> = { content: options.content }
-	if (options.file) {
+	if (options.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options.path) {
+	if (options.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -267,11 +263,11 @@ export async function append(options: FileAppendOptions): Promise<void> {
  */
 export async function prepend(options: FilePrependOptions): Promise<void> {
 	const parameters: Record<string, number | string> = { content: options.content }
-	if (options.file) {
+	if (options.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options.path) {
+	if (options.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -296,11 +292,11 @@ export async function prepend(options: FilePrependOptions): Promise<void> {
  */
 export async function move(options: FileMoveOptions): Promise<void> {
 	const parameters: Record<string, number | string> = { to: options.to }
-	if (options.file) {
+	if (options.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options.path) {
+	if (options.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -320,11 +316,11 @@ export async function move(options: FileMoveOptions): Promise<void> {
  */
 export async function rename(options: FileRenameOptions): Promise<void> {
 	const parameters: Record<string, number | string> = { name: options.name }
-	if (options.file) {
+	if (options.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options.path) {
+	if (options.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -346,11 +342,11 @@ export { deleteFile as delete }
  */
 async function deleteFile(options?: FileDeleteOptions): Promise<void> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 

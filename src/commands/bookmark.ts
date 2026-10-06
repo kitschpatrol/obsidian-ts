@@ -34,11 +34,7 @@ export async function list(options?: Vault): Promise<BookmarkInfo[]> {
 	const parameters: Record<string, number | string> = { format: 'json' }
 	const output = await exec('bookmarks', parameters, ['verbose'], options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseJsonWith(output, z.array(bookmarkInfoSchema))
+	return output.startsWith('No ') ? [] : parseJsonWith(output, z.array(bookmarkInfoSchema))
 }
 
 /**
@@ -73,27 +69,27 @@ export async function total(options?: Vault): Promise<number> {
  */
 export async function add(options: BookmarkAddOptions): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options.file) {
+	if (options.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options.subpath) {
+	if (options.subpath !== undefined && options.subpath !== '') {
 		parameters.subpath = options.subpath
 	}
 
-	if (options.folder) {
+	if (options.folder !== undefined && options.folder !== '') {
 		parameters.folder = options.folder
 	}
 
-	if (options.search) {
+	if (options.search !== undefined && options.search !== '') {
 		parameters.search = options.search
 	}
 
-	if (options.url) {
+	if (options.url !== undefined && options.url !== '') {
 		parameters.url = options.url
 	}
 
-	if (options.title) {
+	if (options.title !== undefined && options.title !== '') {
 		parameters.title = options.title
 	}
 

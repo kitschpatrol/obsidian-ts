@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -58,12 +58,12 @@ jobs:
       - name: Release Notes
         if: env.IS_VALID_COMMIT == 'true'
         id: release-notes
-        uses: kitschpatrol/github-action-release-changelog@v2
+        uses: kitschpatrol/github-action-release-changelog@12279a22cf9d0b432dca8ff189d82ad0dd393345 # v2.0.9
 
       - name: Release
         if: env.IS_VALID_COMMIT == 'true'
         id: release
-        uses: kitschpatrol/github-action-release@v2
+        uses: kitschpatrol/github-action-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         with:
           token: ${{ env.ACCESS_TOKEN }}
           draft: false

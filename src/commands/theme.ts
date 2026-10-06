@@ -22,11 +22,7 @@ export type ThemeUninstallOptions = Simplify<Vault & { name: string }>
 export async function list(options?: Vault): Promise<string[]> {
 	const output = await exec('themes', undefined, ['versions'], options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseLines(output)
+	return output.startsWith('No ') ? [] : parseLines(output)
 }
 
 /**
@@ -42,7 +38,7 @@ export async function list(options?: Vault): Promise<string[]> {
  */
 export async function info(options?: ThemeInfoOptions): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.name) {
+	if (options?.name !== undefined && options.name !== '') {
 		parameters.name = options.name
 	}
 

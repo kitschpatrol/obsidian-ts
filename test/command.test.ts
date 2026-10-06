@@ -3,7 +3,7 @@ import * as command from '../src/commands/command'
 import { setupVault } from './helpers'
 
 /** Matches strings starting with "editor:" */
-const EDITOR_PREFIX_REGEX = /^editor:/
+const EDITOR_PREFIX_REGEX = /^editor:/v
 
 beforeAll(() => {
 	setupVault()

@@ -1,0 +1,8 @@
+# Picked up automatically by lychee (the default value of --config).
+# Single-quoted TOML literal strings, since all values are regular expressions.
+
+# URLs and mail addresses to skip.
+exclude = [
+	# Fragment resolution detection issues
+	'https://obsidian\.md/help/cli#Install\+Obsidian\+CLI',
+]

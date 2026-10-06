@@ -18,11 +18,7 @@ export type SnippetDisableOptions = Simplify<Vault & { name: string }>
 export async function list(options?: Vault): Promise<string[]> {
 	const output = await exec('snippets', undefined, undefined, options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseLines(output)
+	return output.startsWith('No ') ? [] : parseLines(output)
 }
 
 /**
@@ -36,11 +32,7 @@ export async function list(options?: Vault): Promise<string[]> {
 export async function enabled(options?: Vault): Promise<string[]> {
 	const output = await exec('snippets:enabled', undefined, undefined, options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseLines(output)
+	return output.startsWith('No ') ? [] : parseLines(output)
 }
 
 /**

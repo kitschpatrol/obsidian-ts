@@ -35,7 +35,7 @@ export function backupVault(): void {
  * them — without reload, Obsidian never re-scans.
  */
 export async function restoreVault(): Promise<void> {
-	if (!backupDirectory) {
+	if (backupDirectory === undefined) {
 		return
 	}
 
@@ -53,7 +53,8 @@ export async function restoreVault(): Promise<void> {
  * its file watcher, causing CLI commands to hang.
  */
 export function clearDirectory(directory: string): void {
-	for (const entry of readdirSync(directory, { withFileTypes: true })) {
+	const entries = readdirSync(directory, { withFileTypes: true })
+	for (const entry of entries) {
 		rmSync(join(directory, entry.name), { recursive: true })
 	}
 }

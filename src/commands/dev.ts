@@ -81,7 +81,7 @@ export async function debug(options: DevDebugOptions): Promise<string> {
  */
 export async function cdp(options: DevCdpOptions): Promise<string> {
 	const parameters: Record<string, number | string> = { method: options.method }
-	if (options.params) {
+	if (options.params !== undefined && options.params !== '') {
 		parameters.params = options.params
 	}
 
@@ -125,7 +125,7 @@ export async function errors(options?: DevErrorsOptions): Promise<string> {
  */
 export async function screenshot(options?: DevScreenshotOptions): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -153,7 +153,7 @@ export async function console(options?: DevConsoleOptions): Promise<string> {
 		parameters.limit = options.limit
 	}
 
-	if (options?.level) {
+	if (options?.level !== undefined) {
 		parameters.level = options.level
 	}
 
@@ -182,7 +182,7 @@ export async function console(options?: DevConsoleOptions): Promise<string> {
  */
 export async function css(options: DevCssOptions): Promise<string> {
 	const parameters: Record<string, number | string> = { selector: options.selector }
-	if (options.prop) {
+	if (options.prop !== undefined && options.prop !== '') {
 		parameters.prop = options.prop
 	}
 
@@ -210,11 +210,11 @@ export async function css(options: DevCssOptions): Promise<string> {
  */
 export async function dom(options: DevDomOptions): Promise<string> {
 	const parameters: Record<string, number | string> = { selector: options.selector }
-	if (options.attr) {
+	if (options.attr !== undefined && options.attr !== '') {
 		parameters.attr = options.attr
 	}
 
-	if (options.css) {
+	if (options.css !== undefined && options.css !== '') {
 		parameters.css = options.css
 	}
 

@@ -39,7 +39,7 @@ export type VaultOpenOptions = Simplify<Vault & { name: string }>
  */
 export async function info(options?: VaultInfoOptions): Promise<VaultInfo> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.info) {
+	if (options?.info !== undefined) {
 		parameters.info = options.info
 	}
 
@@ -77,7 +77,7 @@ export async function listVerbose(): Promise<VaultListItem[]> {
 		.split('\n')
 		.filter((line) => line.includes('\t'))
 		.map((line) => {
-			const [name, path] = line.split('\t', 2)
+			const [name = '', path = ''] = line.split('\t', 2)
 			return { name: name.trim(), path: path.trim() }
 		})
 

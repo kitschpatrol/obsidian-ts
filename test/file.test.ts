@@ -4,9 +4,9 @@ import * as file from '../src/commands/file'
 import { backupVault, readVaultFile, restoreVault, setupVault, VAULT_DIR } from './helpers'
 
 /** Matches paths starting with "notes/" */
-const NOTES_PREFIX_REGEX = /^notes\//
+const NOTES_PREFIX_REGEX = /^notes\//v
 /** Matches paths ending with ".md" */
-const MD_EXTENSION_REGEX = /\.md$/
+const MD_EXTENSION_REGEX = /\.md$/v
 
 beforeAll(() => {
 	setupVault()

@@ -26,11 +26,11 @@ export type DiffOptions = Simplify<
  */
 export async function diff(options?: DiffOptions): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -42,7 +42,7 @@ export async function diff(options?: DiffOptions): Promise<string> {
 		parameters.to = options.to
 	}
 
-	if (options?.filter) {
+	if (options?.filter !== undefined) {
 		parameters.filter = options.filter
 	}
 

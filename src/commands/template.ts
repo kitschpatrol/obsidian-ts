@@ -20,11 +20,7 @@ export type TemplateInsertOptions = Simplify<Vault & { name: string }>
 export async function list(options?: Vault): Promise<string[]> {
 	const output = await exec('templates', undefined, undefined, options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseLines(output)
+	return output.startsWith('No ') ? [] : parseLines(output)
 }
 
 /**
@@ -56,7 +52,7 @@ export async function total(options?: Vault): Promise<number> {
  */
 export async function read(options: TemplateReadOptions): Promise<string> {
 	const parameters: Record<string, number | string> = { name: options.name }
-	if (options.title) {
+	if (options.title !== undefined && options.title !== '') {
 		parameters.title = options.title
 	}
 

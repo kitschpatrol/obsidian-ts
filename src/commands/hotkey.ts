@@ -25,11 +25,7 @@ export async function list(options?: Vault): Promise<HotkeyInfo[]> {
 	const parameters: Record<string, number | string> = { format: 'json' }
 	const output = await exec('hotkeys', parameters, ['verbose', 'all'], options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseJsonWith(output, z.array(hotkeyInfoSchema))
+	return output.startsWith('No ') ? [] : parseJsonWith(output, z.array(hotkeyInfoSchema))
 }
 
 /**

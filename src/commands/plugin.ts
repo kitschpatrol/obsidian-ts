@@ -41,17 +41,13 @@ export type PluginReloadOptions = Simplify<Vault & { id: string }>
  */
 export async function list(options?: PluginListOptions): Promise<PluginInfo[]> {
 	const parameters: Record<string, number | string> = { format: 'json' }
-	if (options?.filter) {
+	if (options?.filter !== undefined) {
 		parameters.filter = options.filter
 	}
 
 	const output = await exec('plugins', parameters, ['versions'], options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseJsonWith(output, z.array(pluginInfoSchema))
+	return output.startsWith('No ') ? [] : parseJsonWith(output, z.array(pluginInfoSchema))
 }
 
 /**
@@ -67,17 +63,13 @@ export async function list(options?: PluginListOptions): Promise<PluginInfo[]> {
  */
 export async function enabled(options?: PluginEnabledOptions): Promise<PluginInfo[]> {
 	const parameters: Record<string, number | string> = { format: 'json' }
-	if (options?.filter) {
+	if (options?.filter !== undefined) {
 		parameters.filter = options.filter
 	}
 
 	const output = await exec('plugins:enabled', parameters, ['versions'], options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseJsonWith(output, z.array(pluginInfoSchema))
+	return output.startsWith('No ') ? [] : parseJsonWith(output, z.array(pluginInfoSchema))
 }
 
 export type PluginRestrictOptions = Simplify<Vault & { enable?: boolean }>
@@ -146,7 +138,7 @@ export async function info(options: PluginInfoOptions): Promise<string> {
  */
 export async function enable(options: PluginEnableOptions): Promise<string> {
 	const parameters: Record<string, number | string> = { id: options.id }
-	if (options.filter) {
+	if (options.filter !== undefined) {
 		parameters.filter = options.filter
 	}
 
@@ -169,7 +161,7 @@ export async function enable(options: PluginEnableOptions): Promise<string> {
  */
 export async function disable(options: PluginDisableOptions): Promise<string> {
 	const parameters: Record<string, number | string> = { id: options.id }
-	if (options.filter) {
+	if (options.filter !== undefined) {
 		parameters.filter = options.filter
 	}
 

@@ -41,6 +41,10 @@ describe('show', () => {
 		const tasks = await task.list({ path: 'tasks.md' })
 		expect(tasks.length).toBeGreaterThan(0)
 		const firstTask = tasks[0]
+		if (firstTask === undefined) {
+			throw new Error('Expected at least one task in tasks.md')
+		}
+
 		const result = await task.show({ line: firstTask.line, path: firstTask.file })
 		expect(typeof result).toBe('string')
 		expect(result.length).toBeGreaterThan(0)

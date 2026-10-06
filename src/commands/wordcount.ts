@@ -23,11 +23,11 @@ export type WordCountInfo = z.infer<typeof wordCountInfoSchema>
  */
 export async function get(options?: VaultFile): Promise<WordCountInfo> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 

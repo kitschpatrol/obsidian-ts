@@ -38,11 +38,7 @@ export type BaseQueryResult = z.infer<typeof baseQueryResultSchema>
 export async function list(options?: Vault): Promise<string[]> {
 	const output = await exec('bases', undefined, undefined, options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseLines(output)
+	return output.startsWith('No ') ? [] : parseLines(output)
 }
 
 /**
@@ -55,11 +51,11 @@ export async function list(options?: Vault): Promise<string[]> {
  */
 export async function views(options?: VaultFile): Promise<string[]> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -88,19 +84,19 @@ export async function views(options?: VaultFile): Promise<string[]> {
  */
 export async function create(options?: BaseCreateOptions): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
-	if (options?.view) {
+	if (options?.view !== undefined && options.view !== '') {
 		parameters.view = options.view
 	}
 
-	if (options?.name) {
+	if (options?.name !== undefined && options.name !== '') {
 		parameters.name = options.name
 	}
 
@@ -143,15 +139,15 @@ export async function create(options?: BaseCreateOptions): Promise<string> {
  */
 export async function query(options?: BaseQueryOptions): Promise<BaseQueryResult[]> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.file) {
+	if (options?.file !== undefined && options.file !== '') {
 		parameters.file = options.file
 	}
 
-	if (options?.path) {
+	if (options?.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
-	if (options?.view) {
+	if (options?.view !== undefined && options.view !== '') {
 		parameters.view = options.view
 	}
 

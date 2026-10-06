@@ -6,15 +6,15 @@
 
 <!-- badges -->
 
-[![NPM Package obsidian-ts](https://img.shields.io/npm/v/obsidian-ts.svg)](https://npmjs.com/package/obsidian-ts)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/license/mit/)
+[![NPM Package obsidian-ts](https://img.shields.io/npm/v/obsidian-ts.svg)](https://www.npmjs.com/package/obsidian-ts)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/license/mit)
 [![CI](https://github.com/kitschpatrol/obsidian-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/kitschpatrol/obsidian-ts/actions/workflows/ci.yml)
 
 <!-- /badges -->
 
 <!-- short-description -->
 
-**A fully-typed wrapper library for the Obsidian CLI.**
+**Fully-typed wrapper library for the Obsidian CLI.**
 
 <!-- /short-description -->
 
@@ -24,7 +24,7 @@
 
 ## Overview
 
-This library brings the capabilities of the official [Obsidian CLI](https://help.obsidian.md/cli) into your TypeScript codebase.
+This library brings the capabilities of the official [Obsidian CLI](https://obsidian.md/help/cli) into your TypeScript codebase.
 
 It provides a fully-typed, async/await oriented API to interact programmatically with your [Obsidian](https://obsidian.md) vaults.
 
@@ -34,12 +34,17 @@ _Please note that this project is unofficial and not affiliated with or supporte
 
 ## Getting started
 
+<!-- dependencies -->
+
 ### Dependencies
 
-- [Node](https://nodejs.org/) 24.1+
+- [Node.js](https://nodejs.org/) 24.1.0 or newer (specifically `^24.1.0 || >=26.0.0`)
+
+<!-- /dependencies -->
+
 - [Obsidian](https://obsidian.md/download) 1.12.7+ (Desktop version)
 
-The [Obsidian CLI](https://help.obsidian.md/cli#Install+Obsidian+CLI) feature must be enabled in Obsidian:
+The [Obsidian CLI](https://obsidian.md/help/cli#Install+Obsidian+CLI) feature must be enabled in Obsidian:
 
 1. Go to Settings → General.
 2. Enable Command line interface.

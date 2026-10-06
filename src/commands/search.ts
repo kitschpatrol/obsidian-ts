@@ -54,7 +54,7 @@ export type SearchOpenOptions = Simplify<Vault & { query?: string }>
  */
 export async function query(options: SearchQueryOptions): Promise<string[]> {
 	const parameters: Record<string, number | string> = { query: options.query }
-	if (options.path) {
+	if (options.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -70,11 +70,7 @@ export async function query(options: SearchQueryOptions): Promise<string[]> {
 	parameters.format = 'json'
 	const output = await exec('search', parameters, flags.length > 0 ? flags : undefined, options)
 
-	if (output.startsWith('No ')) {
-		return []
-	}
-
-	return parseJsonWith(output, z.array(z.string()))
+	return output.startsWith('No ') ? [] : parseJsonWith(output, z.array(z.string()))
 }
 
 /**
@@ -92,7 +88,7 @@ export async function query(options: SearchQueryOptions): Promise<string[]> {
  */
 export async function total(options: SearchTotalOptions): Promise<number> {
 	const parameters: Record<string, number | string> = { query: options.query }
-	if (options.path) {
+	if (options.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -122,7 +118,7 @@ export async function total(options: SearchTotalOptions): Promise<number> {
  */
 export async function context(options: SearchContextOptions): Promise<SearchContextResult[]> {
 	const parameters: Record<string, number | string> = { format: 'json', query: options.query }
-	if (options.path) {
+	if (options.path !== undefined && options.path !== '') {
 		parameters.path = options.path
 	}
 
@@ -142,11 +138,7 @@ export async function context(options: SearchContextOptions): Promise<SearchCont
 		options,
 	)
 
-	if (result.startsWith('No ')) {
-		return []
-	}
-
-	return parseJsonWith(result, z.array(searchContextResultSchema))
+	return result.startsWith('No ') ? [] : parseJsonWith(result, z.array(searchContextResultSchema))
 }
 
 /**
@@ -162,7 +154,7 @@ export async function context(options: SearchContextOptions): Promise<SearchCont
  */
 export async function open(options?: SearchOpenOptions): Promise<string> {
 	const parameters: Record<string, number | string> = {}
-	if (options?.query) {
+	if (options?.query !== undefined && options.query !== '') {
 		parameters.query = options.query
 	}
 
