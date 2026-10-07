@@ -1,0 +1,87 @@
+name: Update Dependencies
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 3 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm ci
+
+      - name: Run ksc-update
+        uses: kitschpatrol/github-action-skill-to-pr@710cc149d42470565427d1bd957f51bb6d53ef9e # v1.1.0
+        with:
+          skill: ksc-update
+          claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          model: claude-opus-5-5
+          effort: high
+          max-turns: 400
+          instructions: |
+            After the dependency update, check obsidian-ts for parity with the
+            latest Obsidian CLI and fix any drift in the same change.
+
+            Sources:
+            - Latest release: `latestVersion` in
+              https://raw.githubusercontent.com/obsidianmd/obsidian-releases/master/desktop-releases.json.
+              For CI, use the newest obsidianmd/obsidian-releases GitHub release
+              that publishes the installer assets downloaded by
+              .github/actions/setup-obsidian (AppImage, dmg, and exe).
+            - CLI reference:
+              https://raw.githubusercontent.com/obsidianmd/obsidian-help/master/en/Extending%20Obsidian/Obsidian%20CLI.md
+              (rendered at https://obsidian.md/help/cli). Its commit history in
+              obsidianmd/obsidian-help shows what changed and when.
+            - Release notes at https://obsidian.md/changelog/ for every version
+              after the one CI tests (the setup-obsidian `version` input in
+              .github/workflows/ci.yml).
+
+            Compare every documented command, parameter, flag, and output format
+            with the wrappers in src/commands/, their JSDoc, the readme API
+            tables, and the tests in test/. Apply the exclusions and conventions
+            in the readme's "API > Design" section: no `help` or TUI bindings,
+            no csv/tsv output, no partial-data options, camelCase names, and a
+            single options object per function.
+
+            Approved without asking:
+            - Wrap new commands, parameters, and flags; adapt renamed or changed
+              ones; remove wrappers for commands the CLI dropped. These are
+              consumer-facing breaking changes permitted while the project is
+              0.x; recommend a minor release for them.
+            - Set the setup-obsidian `version` in .github/workflows/ci.yml to
+              the latest release so the PR's CI tests run against it.
+            - When a wrapper relies on behavior missing from the current minimum,
+              raise OBSIDIAN_CLI_VERSION in src/exec.ts and the Obsidian
+              requirement in readme.md together.
+
+            This job has no Obsidian instance, so tests cannot run here; the
+            PR's CI workflow runs them against a live instance. Add or update
+            tests for every wrapper you change, and state in the report that
+            live validation is pending CI.
+
+            Add an "Obsidian CLI parity" section to the report: the release
+            version and obsidian-help commit checked, each drift found with
+            its source, the change made or the reason it was excluded, and any
+            CLI minimum change. If nothing drifted, say so and leave src/,
+            test/, and the Obsidian version references unchanged.
