@@ -1,7 +1,7 @@
 import { eslintConfig } from '@kitschpatrol/eslint-config'
 
 export default eslintConfig({
-	ignores: ['test/assets/obsidian-ts-test-vault/**'],
+	ignores: ['test/assets/obsidian-ts-test-vault/**', '**/changelog.md'],
 	md: {
 		overridesEmbeddedScripts: {
 			// Configure vault edge case
